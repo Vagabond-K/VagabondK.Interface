@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net461;netcoreapp3.1</TargetFrameworks>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="VagabondK.Protocols.Modbus" Version="1.0.22" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VagabondK.Interface.Abstractions\VagabondK.Interface.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33103.184
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VagabondK.Interface.Abstractions", "VagabondK.Interface.Abstractions\VagabondK.Interface.Abstractions.csproj", "{43CF6B9D-88CF-4907-BA0F-7152425862E3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VagabondK.Interface.Modbus", "VagabondK.Interface.Modbus\VagabondK.Interface.Modbus.csproj", "{60DEA48D-47B5-4007-8639-33D0AEDECC0C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{2157B19E-96A9-42DA-B94C-419CAF736088}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modbus", "Modbus", "{814CE81D-B876-4FEA-B509-B4CDFD4E7021}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfModbusSlaveSample", "Samples\Modbus\WpfModbusSlaveSample\WpfModbusSlaveSample.csproj", "{E1E15ABE-4D0A-4748-9FF7-39C94232A5F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfModbusMasterSample", "Samples\Modbus\WpfModbusMasterSample\WpfModbusMasterSample.csproj", "{E30D7B4D-D2C7-4559-90B0-5BA4E835FE2B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleModbusMasterSample", "Samples\Modbus\SimpleModbusMasterSample\SimpleModbusMasterSample.csproj", "{0D9B2C4C-6173-4409-9E08-461FA5048CFA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleModbusSlaveSample", "Samples\Modbus\SimpleModbusSlaveSample\SimpleModbusSlaveSample.csproj", "{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{43CF6B9D-88CF-4907-BA0F-7152425862E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43CF6B9D-88CF-4907-BA0F-7152425862E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43CF6B9D-88CF-4907-BA0F-7152425862E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43CF6B9D-88CF-4907-BA0F-7152425862E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60DEA48D-47B5-4007-8639-33D0AEDECC0C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60DEA48D-47B5-4007-8639-33D0AEDECC0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60DEA48D-47B5-4007-8639-33D0AEDECC0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60DEA48D-47B5-4007-8639-33D0AEDECC0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1E15ABE-4D0A-4748-9FF7-39C94232A5F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1E15ABE-4D0A-4748-9FF7-39C94232A5F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1E15ABE-4D0A-4748-9FF7-39C94232A5F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1E15ABE-4D0A-4748-9FF7-39C94232A5F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E30D7B4D-D2C7-4559-90B0-5BA4E835FE2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E30D7B4D-D2C7-4559-90B0-5BA4E835FE2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E30D7B4D-D2C7-4559-90B0-5BA4E835FE2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E30D7B4D-D2C7-4559-90B0-5BA4E835FE2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D9B2C4C-6173-4409-9E08-461FA5048CFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D9B2C4C-6173-4409-9E08-461FA5048CFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D9B2C4C-6173-4409-9E08-461FA5048CFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D9B2C4C-6173-4409-9E08-461FA5048CFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{814CE81D-B876-4FEA-B509-B4CDFD4E7021} = {2157B19E-96A9-42DA-B94C-419CAF736088}
+		{E1E15ABE-4D0A-4748-9FF7-39C94232A5F9} = {814CE81D-B876-4FEA-B509-B4CDFD4E7021}
+		{E30D7B4D-D2C7-4559-90B0-5BA4E835FE2B} = {814CE81D-B876-4FEA-B509-B4CDFD4E7021}
+		{0D9B2C4C-6173-4409-9E08-461FA5048CFA} = {814CE81D-B876-4FEA-B509-B4CDFD4E7021}
+		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD} = {814CE81D-B876-4FEA-B509-B4CDFD4E7021}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4A198F4-6474-4F77-A906-0B50A8F7838D}
+	EndGlobalSection
+EndGlobal
