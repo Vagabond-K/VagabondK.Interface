@@ -10,13 +10,7 @@ using VagabondK.Protocols.Modbus.Data;
 
 namespace VagabondK.Interface.Modbus
 {
-    interface IModbusInterface
-    {
-        void SetReceivedValue<TValue, TValuePoint>(TValuePoint point, TValue value, DateTime? timeStamp = null)
-            where TValuePoint : ModbusPoint;
-    }
-
-    public class ModbusMasterInterface : PollingInterface<ModbusPoint>, IModbusInterface
+    public class ModbusMasterInterface : PollingInterface<ModbusPoint>, IWaitSendingInterface
     {
         class MergedReadRequest : ModbusReadRequest
         {
@@ -40,12 +34,16 @@ namespace VagabondK.Interface.Modbus
 
         protected override void OnAdded(ModbusPoint point)
         {
+            if (point == null) return;
+            point.Initialize();
             point.PropertyChanged += OnPointPropertyChanged;
             lock (settingChangedLock) isSettingChanged = true;
         }
 
         protected override void OnRemoved(ModbusPoint point)
         {
+            if (point == null) return;
+            point.Initialize();
             point.PropertyChanged -= OnPointPropertyChanged;
             lock (settingChangedLock) isSettingChanged = true;
         }
@@ -54,15 +52,6 @@ namespace VagabondK.Interface.Modbus
         {
             lock (settingChangedLock) isSettingChanged = true;
         }
-
-        protected override Task<bool> OnSendRequestedAsync<TValue>(ModbusPoint point, ref TValue value, ref DateTime? timeStamp)
-            => (point as ModbusPoint<TValue>)?.Send(Master, value) ?? point?.Send(Master, value) ?? Task.FromResult(false);
-        protected override bool OnSendRequested<TValue>(ModbusPoint point, ref TValue value, ref DateTime? timeStamp)
-            => ((point as ModbusPoint<TValue>)?.Send(Master, value) ?? point?.Send(Master, value) ?? Task.FromResult(false)).Result;
-
-
-        void IModbusInterface.SetReceivedValue<TValue, TValuePoint>(TValuePoint point, TValue value, DateTime? timeStamp)
-            => SetReceivedValue(point, ref value, ref timeStamp);
 
         protected override void OnCreatePollingRequests()
         {
@@ -167,16 +156,9 @@ namespace VagabondK.Interface.Modbus
                                     foreach (var point in request.Points)
                                         if (point is ModbusBooleanPoint booleanPoint)
                                         {
-                                            try
-                                            {
-                                                var index = point.Address - request.Address;
-                                                var value = values[index];
-                                                SetReceivedValue(booleanPoint, ref value, ref timeStamp);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                ErrorOccurredAt(point, ex, ErrorDirection.Receiving);
-                                            }
+                                            var index = point.Address - request.Address;
+                                            var value = values[index];
+                                            booleanPoint.SetReceivedValue(ref value, ref timeStamp);
                                         }
                                 }
                                 break;
@@ -193,16 +175,7 @@ namespace VagabondK.Interface.Modbus
                                     registers.Allocate(request.Address, (byte[])registerResponse.Bytes);
                                     foreach (var point in request.Points)
                                         if (point is IModbusRegisterPoint registerPoint)
-                                        {
-                                            try
-                                            {
-                                                registerPoint.SetReceivedValue(registers, timeStamp, this);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                ErrorOccurredAt(point, ex, ErrorDirection.Receiving);
-                                            }
-                                        }
+                                            registerPoint.SetReceivedValue(registers, ref timeStamp);
                                 }
                                 break;
                         }
@@ -218,7 +191,7 @@ namespace VagabondK.Interface.Modbus
                     succeed = false;
                     pollingExceptions.Add(ex);
                     foreach (var point in request.Points)
-                        ErrorOccurredAt(point, ex, ErrorDirection.Receiving);
+                        point.RaiseErrorOccurred(ex, ErrorDirection.Receiving);
                 }
             }
 

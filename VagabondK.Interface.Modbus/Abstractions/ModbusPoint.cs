@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Protocols.Modbus;
@@ -59,8 +60,10 @@ namespace VagabondK.Interface.Modbus.Abstractions
         public abstract bool Writable { get; protected set; }
         protected ushort AddressIndex => (ushort)(RequestAddress == null ? 0 : RequestAddress.Value - Address);
 
-        internal abstract Task<bool> Send<T>(ModbusMaster master, T value);
-        internal abstract bool Send<T>(ModbusSlave slave, T value);
+        internal new void RaiseErrorOccurred(Exception exception, ErrorDirection errorDirection)
+            => base.RaiseErrorOccurred(exception, errorDirection);
+
+        internal abstract void Initialize();
     }
 
     public abstract class ModbusPoint<TValue> : ModbusPoint
@@ -72,12 +75,61 @@ namespace VagabondK.Interface.Modbus.Abstractions
         {
         }
 
-        protected abstract Task<bool> OnSendRequested(ModbusMaster master, TValue value);
-        protected abstract bool OnSendRequested(ModbusSlave slave, TValue value);
-        internal Task<bool> Send(ModbusMaster master, TValue value) => OnSendRequested(master, value);
-        internal override Task<bool> Send<T>(ModbusMaster master, T value) => OnSendRequested(master, value.To<T, TValue>());
-        internal bool Send(ModbusSlave slave, TValue value) => OnSendRequested(slave, value);
-        internal override bool Send<T>(ModbusSlave slave, T value) => OnSendRequested(slave, value.To<T, TValue>());
+        protected abstract bool OnSendRequested(ModbusMaster master, ref TValue value);
+        protected abstract bool OnSendRequested(ModbusSlave slave, ref TValue value);
+
+        internal new void SetReceivedValue(ref TValue value, ref DateTime? timeStamp)
+            => base.SetReceivedValue(ref value, ref timeStamp);
+
+        private ModbusMasterInterface masterInterface;
+        private ModbusSlaveInterface slaveInterface;
+
+        private bool SendToMaster(ref TValue value, ref DateTime? timeStamp)
+        {
+            var master = masterInterface?.Master;
+            return master != null && OnSendRequested(master, ref value);
+        }
+        private bool SendToSlave(ref TValue value, ref DateTime? timeStamp)
+            => slaveInterface?.OnSendRequested(this, ref value, ref timeStamp, OnSendRequested) ?? false;
+
+        internal override void Initialize()
+        {
+            if (Interface is ModbusMasterInterface master)
+            {
+                slaveInterface = null;
+                masterInterface = master;
+                send = SendToMaster;
+            }
+            else if (Interface is ModbusSlaveInterface slave)
+            {
+                masterInterface = null;
+                slaveInterface = slave;
+                send = SendToSlave;
+            }
+            else
+            {
+                masterInterface = null;
+                slaveInterface = null;
+                send = null;
+            }
+        }
+
+        private SendDelegate send;
+        private delegate bool SendDelegate(ref TValue value, ref DateTime? timeStamp);
+
+        private bool Send<T>(ref T value, ref DateTime? timeStamp)
+        {
+            if (this is ModbusPoint<T> point)
+                return point.send?.Invoke(ref value, ref timeStamp) ?? false;
+            else
+            {
+                var converted = value.To<T, TValue>();
+                return send?.Invoke(ref converted, ref timeStamp) ?? false;
+            }
+        }
+
+        protected override Task<bool> OnSendAsyncRequested<T>(T value, DateTime? timeStamp) => Task.Run(() => Send(ref value, ref timeStamp));
+        protected override bool OnSendRequested<T>(T value, DateTime? timeStamp) => Send(ref value, ref timeStamp);
 
         public InterfaceHandler<TValue> DefaultHandler
         {

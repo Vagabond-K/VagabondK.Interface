@@ -28,7 +28,7 @@ namespace VagabondK.Interface.Abstractions
                     handlers.Remove(removed);
         }
 
-        internal void RaiseErrorOccurred(Exception exception, ErrorDirection direction)
+        protected void RaiseErrorOccurred(Exception exception, ErrorDirection direction)
         {
             lock (handlers)
                 foreach (var handler in handlers.Select(reference => reference.TryGetTarget(out var target) ? target : null))
@@ -40,13 +40,25 @@ namespace VagabondK.Interface.Abstractions
         public bool SendLocalValue()
             => GetLastUpdatedHandler()?.SendLocalValue() ?? false;
 
-        internal void SetReceivedValue<TValue>(ref TValue value, ref DateTime? timeStamp)
+        protected void SetReceivedValue<TValue>(ref TValue value, ref DateTime? timeStamp)
         {
             lock (handlers)
                 foreach (var handler in handlers.Select(reference => reference.TryGetTarget(out var target) ? target : null))
-                    if (handler is InterfaceHandler<TValue> interfaceHandler) interfaceHandler.SetReceivedValue(ref value, ref timeStamp);
-                    else handler.SetReceivedOtherTypeValue(ref value, ref timeStamp);
+                    try
+                    {
+                        if (handler is InterfaceHandler<TValue> interfaceHandler) interfaceHandler.SetReceivedValue(ref value, ref timeStamp);
+                        else handler.SetReceivedOtherTypeValue(ref value, ref timeStamp);
+                    }
+                    catch (Exception ex)
+                    {
+                        handler.RaiseErrorOccurred(ex, ErrorDirection.Receiving);
+                    }
         }
+
+        public bool IsWaitSending => Interface is IWaitSendingInterface;
+
+        protected internal abstract Task<bool> OnSendAsyncRequested<TValue>(TValue value, DateTime? timeStamp = null);
+        protected internal abstract bool OnSendRequested<TValue>(TValue value, DateTime? timeStamp = null);
 
         public void Add(InterfaceHandler handler)
         {

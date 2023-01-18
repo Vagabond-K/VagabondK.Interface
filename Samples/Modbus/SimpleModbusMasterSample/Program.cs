@@ -48,7 +48,7 @@ namespace SimpleModbusMasterSample
                     binding.ErrorOccurred += Binding_ExceptionOccurred;
                     if (binding is InterfaceBinding<float> singleBinding
                         && singleBinding.PropertyName == nameof(localObject.Single3))
-                        singleBinding.SendAndUpdateProperty(23.45f).Wait();
+                        singleBinding.SendAsyncAndUpdateProperty(23.45f).Wait();
                 }
 
             //localObject.Single3 = 123.567f;

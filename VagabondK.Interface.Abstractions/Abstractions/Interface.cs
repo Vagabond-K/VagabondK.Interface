@@ -16,14 +16,6 @@ namespace VagabondK.Interface.Abstractions
 
         protected virtual void OnAdded(TPoint point) { }
         protected virtual void OnRemoved(TPoint point) { }
-        protected abstract Task<bool> OnSendRequestedAsync<TValue>(TPoint point, ref TValue value, ref DateTime? timeStamp);
-        protected abstract bool OnSendRequested<TValue>(TPoint point, ref TValue value, ref DateTime? timeStamp);
-
-        protected void SetReceivedValue<TValue>(TPoint point, ref TValue value, ref DateTime? timeStamp)
-            => point?.SetReceivedValue(ref value, ref timeStamp);
-
-        protected void ErrorOccurredAt(TPoint point, Exception exception, ErrorDirection direction)
-            => point?.RaiseErrorOccurred(exception, direction);
 
         protected void RaisePropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         public event PropertyChangedEventHandler PropertyChanged;
@@ -70,33 +62,6 @@ namespace VagabondK.Interface.Abstractions
         }
 
         public void Clear() => points.Clear();
-
-        async Task<bool> IInterface.SendAsync<TValue>(InterfacePoint point, TValue value, DateTime? timeStamp)
-        {
-            try
-            {
-                return  await OnSendRequestedAsync((TPoint)point, ref value, ref timeStamp);
-            }
-            catch (Exception ex)
-            {
-                point.RaiseErrorOccurred(ex, ErrorDirection.Sending);
-            }
-            return false;
-        }
-
-        bool IInterface.Send<TValue>(InterfacePoint point, ref TValue value, ref DateTime? timeStamp)
-        {
-            try
-            {
-                var result = OnSendRequested((TPoint)point, ref value, ref timeStamp);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                point.RaiseErrorOccurred(ex, ErrorDirection.Sending);
-            }
-            return false;
-        }
 
         bool IInterface.Remove(InterfacePoint point) => Remove((TPoint)point);
 

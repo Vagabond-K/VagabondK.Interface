@@ -41,9 +41,9 @@ namespace VagabondK.Interface
         protected virtual void OnReceived(ref TValue value, ref DateTime? timeStamp) { }
 
         public override Task<bool> SendLocalValueAsync()
-            => timeStamp != null ? SendAsync(value, timeStamp) : Task.FromResult(false);
+            => timeStamp != null ? Point?.OnSendAsyncRequested(value, timeStamp) : Task.FromResult(false);
         public override bool SendLocalValue()
-            => timeStamp != null ? Send(value, timeStamp) : false;
+            => timeStamp != null && (Point?.OnSendRequested(value, timeStamp) ?? false);
 
         public InterfaceHandler() { }
         public InterfaceHandler(InterfaceMode mode) : base(mode)
@@ -53,10 +53,9 @@ namespace VagabondK.Interface
         public TValue Value { get => value; protected set => SetProperty(ref this.value, ref value); }
         public event ReceivedEventHandler<TValue> Received;
 
-        public Task<bool> SendAsync(TValue value) => SendAsync(value, null);
-        public async Task<bool> SendAsync(TValue value, DateTime? timeStamp)
+        public async Task<bool> SendAsync(TValue value, DateTime? timeStamp = null)
         {
-            if (await ((Point?.Interface as IInterface)?.SendAsync(Point, value, timeStamp) ?? Task.FromResult(false)))
+            if (await (Point?.OnSendAsyncRequested(value, timeStamp) ?? Task.FromResult(false)))
             {
                 SetLocalValue(ref value, ref timeStamp);
                 return true;
@@ -64,10 +63,9 @@ namespace VagabondK.Interface
             return false;
         }
 
-        public bool Send(TValue value) => Send(value, nullTimeStamp);
-        public bool Send(TValue value, DateTime? timeStamp)
+        public bool Send(TValue value, DateTime? timeStamp = null)
         {
-            if ((Point?.Interface as IInterface)?.Send(Point, ref value, ref timeStamp) ?? false)
+            if (Point?.OnSendRequested(value, timeStamp) ?? false)
             {
                 SetLocalValue(ref value, ref timeStamp);
                 return true;

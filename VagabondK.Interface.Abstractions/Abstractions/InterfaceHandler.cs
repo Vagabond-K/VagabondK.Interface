@@ -26,13 +26,6 @@ namespace VagabondK.Interface.Abstractions
         public abstract Task<bool> SendLocalValueAsync();
         public abstract bool SendLocalValue();
 
-        internal static DateTime? nullTimeStamp;
-
-        public Task<bool> SendAsync<T>(T value) => SendAsync(value, null);
-        public abstract Task<bool> SendAsync<T>(T value, DateTime? timeStamp);
-        public bool Send<T>(T value) => Send(value, null);
-        public abstract bool Send<T>(T value, DateTime? timeStamp);
-
         internal abstract void SetReceivedOtherTypeValue<T>(ref T value, ref DateTime? timeStamp);
 
         internal void RaiseErrorOccurred(Exception exception, ErrorDirection direction)
@@ -53,5 +46,9 @@ namespace VagabondK.Interface.Abstractions
         public DateTime? TimeStamp { get => timeStamp; internal set => SetProperty(ref timeStamp, ref value); }
         public event ErrorOccurredEventHandler ErrorOccurred;
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public abstract Task<bool> SendAsync<T>(T value, DateTime? timeStamp = null);
+        public abstract bool Send<T>(T value, DateTime? timeStamp);
+
     }
 }

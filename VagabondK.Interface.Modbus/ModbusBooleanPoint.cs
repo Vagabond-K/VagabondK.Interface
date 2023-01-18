@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.Modbus.Abstractions;
 using VagabondK.Protocols.Modbus;
+using VagabondK.Protocols.Modbus.Data;
 
 namespace VagabondK.Interface.Modbus
 {
@@ -47,25 +48,24 @@ namespace VagabondK.Interface.Modbus
         private ModbusWriteCoilRequest writeRequest;
         private readonly object writeRequestLock = new object();
 
-        protected override Task<bool> OnSendRequested(ModbusMaster master, bool value)
-            => Task.Run(() =>
+        protected override bool OnSendRequested(ModbusMaster master, ref bool value)
+        {
+            lock (writeRequestLock)
             {
-                lock (writeRequestLock)
-                {
-                    if (!writable) return false;
+                if (!writable) return false;
 
-                    if (writeRequest == null || writeRequest.Function == ModbusFunction.WriteMultipleCoils != (UseMultiWriteFunction ?? false))
-                        writeRequest = (UseMultiWriteFunction ?? false)
-                        ? new ModbusWriteCoilRequest(SlaveAddress, Address, new[] { value })
-                        : new ModbusWriteCoilRequest(SlaveAddress, Address, value);
-                    else
-                        writeRequest.Values[0] = value;
+                if (writeRequest == null || writeRequest.Function == ModbusFunction.WriteMultipleCoils != (UseMultiWriteFunction ?? false))
+                    writeRequest = (UseMultiWriteFunction ?? false)
+                    ? new ModbusWriteCoilRequest(SlaveAddress, Address, new[] { value })
+                    : new ModbusWriteCoilRequest(SlaveAddress, Address, value);
+                else
+                    writeRequest.Values[0] = value;
 
-                    return master.Request(writeRequest) is ModbusOkResponse;
-                }
-            });
+                return master.Request(writeRequest) is ModbusOkResponse;
+            }
+        }
 
-        protected override bool OnSendRequested(ModbusSlave slave, bool value)
+        protected override bool OnSendRequested(ModbusSlave slave, ref bool value)
         {
             try
             {

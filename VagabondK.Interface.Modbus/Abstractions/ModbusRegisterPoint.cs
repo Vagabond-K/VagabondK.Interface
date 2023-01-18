@@ -50,45 +50,44 @@ namespace VagabondK.Interface.Modbus.Abstractions
 
         protected abstract byte[] GetBytes(TValue value);
 
-        protected override Task<bool> OnSendRequested(ModbusMaster master, TValue value)
-            => Task.Run(() =>
+        protected override bool OnSendRequested(ModbusMaster master, ref TValue value)
+        {
+            lock (writeRequestLock)
             {
-                lock (writeRequestLock)
+                var bytes = GetBytes(value);
+
+                if (!writable) return false;
+
+                var writeRequest = WriteRequest;
+
+                if (writeRequest == null || writeRequest.Function == ModbusFunction.WriteMultipleHoldingRegisters != (UseMultiWriteFunction ?? DefaultUseMultiWriteFunction))
+                    WriteRequest = writeRequest = (UseMultiWriteFunction ?? DefaultUseMultiWriteFunction)
+                    ? new ModbusWriteHoldingRegisterRequest(SlaveAddress, Address, Enumerable.Repeat((byte)0, bytes.Length))
+                    : new ModbusWriteHoldingRegisterRequest(SlaveAddress, Address, 0);
+
+                if (writeRequest.Function == ModbusFunction.WriteMultipleHoldingRegisters)
                 {
-                    var bytes = GetBytes(value);
-
-                    if (!writable) return false;
-
-                    var writeRequest = WriteRequest;
-
-                    if (writeRequest == null || writeRequest.Function == ModbusFunction.WriteMultipleHoldingRegisters != (UseMultiWriteFunction ?? DefaultUseMultiWriteFunction))
-                        WriteRequest = writeRequest = (UseMultiWriteFunction ?? DefaultUseMultiWriteFunction)
-                        ? new ModbusWriteHoldingRegisterRequest(SlaveAddress, Address, Enumerable.Repeat((byte)0, bytes.Length))
-                        : new ModbusWriteHoldingRegisterRequest(SlaveAddress, Address, 0);
-
-                    if (writeRequest.Function == ModbusFunction.WriteMultipleHoldingRegisters)
-                    {
-                        for (int i = 0; i < bytes.Length; i++)
-                            writeRequest.Bytes[i] = bytes[i];
-                        return master.Request(writeRequest) is ModbusOkResponse;
-                    }
-                    else
-                    {
-                        bool result = false;
-                        int requestCount = bytes.Length / 2;
-                        for (int i = 0; i < requestCount; i++)
-                        {
-                            writeRequest.Bytes[0] = bytes[i * 2];
-                            writeRequest.Bytes[1] = bytes[i * 2 + 1];
-                            writeRequest.Address = (ushort)(Address + i);
-                            result = master.Request(writeRequest) is ModbusOkResponse;
-                        }
-                        return result;
-                    }
+                    for (int i = 0; i < bytes.Length; i++)
+                        writeRequest.Bytes[i] = bytes[i];
+                    return master.Request(writeRequest) is ModbusOkResponse;
                 }
-            });
+                else
+                {
+                    bool result = false;
+                    int requestCount = bytes.Length / 2;
+                    for (int i = 0; i < requestCount; i++)
+                    {
+                        writeRequest.Bytes[0] = bytes[i * 2];
+                        writeRequest.Bytes[1] = bytes[i * 2 + 1];
+                        writeRequest.Address = (ushort)(Address + i);
+                        result = master.Request(writeRequest) is ModbusOkResponse;
+                    }
+                    return result;
+                }
+            }
+        }
 
-        protected override bool OnSendRequested(ModbusSlave slave, TValue value)
+        protected override bool OnSendRequested(ModbusSlave slave, ref TValue value)
         {
             try
             {
@@ -106,10 +105,11 @@ namespace VagabondK.Interface.Modbus.Abstractions
             Registers = registers;
         }
 
-        void IModbusRegisterPoint.SetReceivedValue(ModbusRegisters registers, DateTime? timeStamp, IModbusInterface @interface)
+        void IModbusRegisterPoint.SetReceivedValue(ModbusRegisters registers, ref DateTime? timeStamp)
         {
             Registers = registers;
-            @interface.SetReceivedValue(this, GetValue(), timeStamp);
+            var value = GetValue();
+            SetReceivedValue(ref value, ref timeStamp);
         }
 
     }

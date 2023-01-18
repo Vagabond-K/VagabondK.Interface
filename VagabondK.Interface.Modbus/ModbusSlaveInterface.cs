@@ -11,7 +11,7 @@ using VagabondK.Protocols.Modbus.Data;
 
 namespace VagabondK.Interface.Modbus
 {
-    public class ModbusSlaveInterface : Interface<ModbusPoint>, IModbusInterface
+    public class ModbusSlaveInterface : Interface<ModbusPoint>
     {
         class AddressMap
         {
@@ -140,6 +140,7 @@ namespace VagabondK.Interface.Modbus
         protected override void OnAdded(ModbusPoint point)
         {
             if (point == null) return;
+            point.Initialize();
             SetPoint(point);
             point.PropertyChanging += OnPointPropertyChanging;
             point.PropertyChanged += OnPointPropertyChanged;
@@ -148,6 +149,7 @@ namespace VagabondK.Interface.Modbus
         protected override void OnRemoved(ModbusPoint point)
         {
             if (point == null) return;
+            point.Initialize();
             ClearPoint(point);
             point.PropertyChanging -= OnPointPropertyChanging;
             point.PropertyChanged -= OnPointPropertyChanged;
@@ -187,20 +189,15 @@ namespace VagabondK.Interface.Modbus
 
             if (points != null)
                 foreach (var point in points)
-                    try
-                    {
-                        var value = e.Values[point.Address - e.Address];
-                        SetReceivedValue(point, ref value, ref timeStamp);
-                    }
-                    catch (Exception ex)
-                    {
-                        ErrorOccurredAt(point, ex, ErrorDirection.Receiving);
-                    }
+                {
+                    var value = e.Values[point.Address - e.Address];
+                    point.SetReceivedValue(ref value, ref timeStamp);
+                }
         }
 
         private void OnRequestedWriteHoldingRegister(object sender, RequestedWriteHoldingRegisterEventArgs e)
         {
-            var timeStamp = DateTime.Now;
+            DateTime? timeStamp = DateTime.Now;
             IModbusRegisterPoint[] points = null;
             lock (addressMaps)
                 if (addressMaps.TryGetValue(e.SlaveAddress, out var addressMap))
@@ -209,21 +206,14 @@ namespace VagabondK.Interface.Modbus
 
             if (points != null && Service.TryGetModbusSlave(e.SlaveAddress, out var modbusSlave))
                 foreach (var point in points)
-                    try
-                    {
-                        point.SetReceivedValue(modbusSlave.HoldingRegisters, timeStamp, this);
-                    }
-                    catch (Exception ex)
-                    {
-                        ErrorOccurredAt(point as ModbusPoint, ex, ErrorDirection.Receiving);
-                    }
+                    point.SetReceivedValue(modbusSlave.HoldingRegisters, ref timeStamp);
         }
 
         public ModbusSlaveService Service { get; }
 
-        protected override Task<bool> OnSendRequestedAsync<TValue>(ModbusPoint point, ref TValue value, ref DateTime? timeStamp)
-            => Task.FromResult(OnSendRequested(point, ref value, ref timeStamp));
-        protected override bool OnSendRequested<TValue>(ModbusPoint point, ref TValue value, ref DateTime? timeStamp)
+        internal delegate bool SendToSlaveDelegate<TValue>(ModbusSlave slave, ref TValue value);
+
+        internal bool OnSendRequested<TValue>(ModbusPoint<TValue> point, ref TValue value, ref DateTime? timeStamp, SendToSlaveDelegate<TValue> send)
         {
             ModbusSlave modbusSlave = null;
             var slaveAddress = point.SlaveAddress;
@@ -232,7 +222,7 @@ namespace VagabondK.Interface.Modbus
                 Service.TryGetModbusSlave(slaveAddress, out modbusSlave);
             if (modbusSlave == null) return false;
 
-            var result = (point as ModbusPoint<TValue>)?.Send(modbusSlave, value) ?? point?.Send(modbusSlave, value) ?? false;
+            var result = send?.Invoke(modbusSlave, ref value) ?? false;
 
             if (point is IModbusRegisterPoint registerPoint)
             {
@@ -250,7 +240,7 @@ namespace VagabondK.Interface.Modbus
 
                 if (points != null)
                     foreach (var refPoint in points)
-                        refPoint.SetReceivedValue(registers, timeStamp, this);
+                        refPoint.SetReceivedValue(registers, ref timeStamp);
             }
             else if (point is ModbusBooleanPoint booleanPoint)
             {
@@ -259,18 +249,15 @@ namespace VagabondK.Interface.Modbus
                     if (addressMaps.TryGetValue(slaveAddress, out var addressMap))
                     {
                         if ((point.Writable ? addressMap.coils : addressMap.discreteInput).TryGetValue(pointAddress, out var refPoints))
-                            points = refPoints.Where(refPoint => refPoint != point).ToArray();
+                            points = refPoints.Where(refPoint => refPoint != booleanPoint).ToArray();
                     }
                 if (points != null)
                     foreach (var refPoint in points)
-                        SetReceivedValue(refPoint, ref value, ref timeStamp);
+                        (refPoint as ModbusPoint<TValue>)?.SetReceivedValue(ref value, ref timeStamp);
             }
 
             return result;
         }
-
-        void IModbusInterface.SetReceivedValue<TValue, TValuePoint>(TValuePoint point, TValue value, DateTime? timeStamp)
-            => SetReceivedValue(point, ref value, ref timeStamp);
 
         public IEnumerable<InterfaceHandler> SetBindings(object target, byte slaveAddress)
             => SetBindings(target, point => { point.SlaveAddress = slaveAddress; });

@@ -24,19 +24,22 @@ namespace VagabondK.Interface
         private Action<TValue> setter;
         private bool isUpdating;
 
-        private void UpdatePropertyValue(ref TValue value, ErrorDirection errorDirection)
+        private void UpdatePropertyValue(ref TValue value, bool isReceiving = false)
         {
             lock (updateLock)
             {
                 isUpdating = true;
-                try
-                {
+                if (isReceiving)
+                    try
+                    {
+                        setter?.Invoke(value);
+                    }
+                    catch (Exception ex)
+                    {
+                        RaiseErrorOccurred(ex, ErrorDirection.Receiving);
+                    }
+                else
                     setter?.Invoke(value);
-                }
-                catch (Exception ex)
-                {
-                    RaiseErrorOccurred(ex, errorDirection);
-                }
                 isUpdating = false;
             }
         }
@@ -161,9 +164,11 @@ namespace VagabondK.Interface
         private Func<PropertyChangingEventArgs, TValue> newValueGetter;
         private Action<PropertyChangingEventArgs> cancel;
 
-        private void OnPropertyChanging(object sender, PropertyChangingEventArgs e)
+        private async void OnPropertyChanging(object sender, PropertyChangingEventArgs e)
         {
-            if ((Mode == InterfaceMode.TwoWay || Mode == InterfaceMode.SendOnly)
+            var point = Point;
+
+            if (point != null && (Mode == InterfaceMode.TwoWay || Mode == InterfaceMode.SendOnly)
                 && !isUpdating && e.PropertyName == PropertyName)
             {
                 var eventArgstype = e?.GetType();
@@ -194,12 +199,17 @@ namespace VagabondK.Interface
 
                 var newValueGetter = this.newValueGetter;
                 var cancel = this.cancel;
-
+                
                 if (newValueGetter != null && cancel != null)
                 {
-                    var result = SendAsync(newValueGetter(e)).Result;
-
-                    if (!result && RollbackOnSendError)
+                    var newValue = newValueGetter(e);
+                    if (point.IsWaitSending)
+                    {
+                        cancel(e);
+                        if (await point.OnSendAsyncRequested(newValue))
+                            UpdatePropertyValue(ref newValue);
+                    }
+                    else if (!point.OnSendRequested(newValue))
                         cancel(e);
                 }
                 else if (Target is INotifyPropertyChanged notifyPropertyChanged)
@@ -219,14 +229,15 @@ namespace VagabondK.Interface
         private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var getter = this.getter;
+            var point = Point;
 
-            if (getter != null
+            if (getter != null && point != null
                 && (Mode == InterfaceMode.TwoWay || Mode == InterfaceMode.SendOnly)
                 && memberType != null && !isUpdating && e.PropertyName == PropertyName)
             {
                 var value = getter();
-                if (!await SendAsync(value) && RollbackOnSendError)
-                    UpdatePropertyValue(ref this.value, ErrorDirection.Indeterminate);
+                if (!(!point.IsWaitSending ? point.OnSendRequested(value) : await point.OnSendAsyncRequested(value)) && RollbackOnSendError)
+                    UpdatePropertyValue(ref this.value);
             }
         }
 
@@ -245,7 +256,7 @@ namespace VagabondK.Interface
         }
 
         protected override void OnReceived(ref TValue value, ref DateTime? timeStamp)
-            => UpdatePropertyValue(ref value, ErrorDirection.Receiving);
+            => UpdatePropertyValue(ref value, true);
 
         public object Target
         {
@@ -329,15 +340,27 @@ namespace VagabondK.Interface
             }
         }
 
-        public Task<bool> SendAndUpdateProperty(TValue value) => SendAndUpdateProperty(value, null);
-        public async Task<bool> SendAndUpdateProperty(TValue value, DateTime? timeStamp)
+        public Task<bool> SendAsyncAndUpdateProperty(TValue value) => SendAsyncAndUpdateProperty(value, null);
+        public async Task<bool> SendAsyncAndUpdateProperty(TValue value, DateTime? timeStamp)
         {
-            if (await SendAsync(value, timeStamp))
+            if (await Point?.OnSendAsyncRequested(value, timeStamp))
             {
-                UpdatePropertyValue(ref value, ErrorDirection.Sending);
+                UpdatePropertyValue(ref value);
                 return true;
             }
             return false;
         }
+
+        public bool SendAndUpdateProperty(TValue value) => SendAndUpdateProperty(value, null);
+        public bool SendAndUpdateProperty(TValue value, DateTime? timeStamp)
+        {
+            if (Point?.OnSendRequested(value, timeStamp) ?? false)
+            {
+                UpdatePropertyValue(ref value);
+                return true;
+            }
+            return false;
+        }
+
     }
 }
