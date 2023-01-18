@@ -11,7 +11,7 @@ namespace VagabondK.Interface.Modbus
         public ModbusDIAttribute(ushort address, ushort requestAddress, ushort requestLength) : base(address, requestAddress, requestLength) { }
         public ModbusDIAttribute(byte slaveAddress, ushort address, ushort requestAddress, ushort requestLength) : base(slaveAddress, address, requestAddress, requestLength) { }
 
-        protected override InterfacePoint OnCreatePoint(MemberInfo memberInfo)
-            => new ModbusBooleanPoint(GetSlaveAddress(memberInfo.ReflectedType), false, Address, RequestAddress, RequestLength, null);
+        protected override InterfacePoint OnCreatePoint(MemberInfo memberInfo, InterfaceAttribute rootAttribute)
+            => new ModbusBooleanPoint(GetSlaveAddress(rootAttribute), true, Address, RequestAddress, RequestLength, null);
     }
 }

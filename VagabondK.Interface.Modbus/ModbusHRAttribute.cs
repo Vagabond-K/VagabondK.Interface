@@ -17,6 +17,6 @@ namespace VagabondK.Interface.Modbus
 
         public bool? UseMultiWriteFunction { get; }
 
-        protected override InterfacePoint OnCreatePoint(MemberInfo memberInfo) => OnCreatePoint(memberInfo, true, UseMultiWriteFunction);
+        protected override InterfacePoint OnCreatePoint(MemberInfo memberInfo, InterfaceAttribute rootAttribute) => OnCreatePoint(memberInfo, rootAttribute, true, UseMultiWriteFunction);
     }
 }

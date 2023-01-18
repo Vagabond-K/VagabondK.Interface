@@ -24,7 +24,7 @@ namespace VagabondK.Interface
         private Action<TValue> setter;
         private bool isUpdating;
 
-        private void UpdatePropertyValue(TValue value, ErrorDirection errorDirection)
+        private void UpdatePropertyValue(ref TValue value, ErrorDirection errorDirection)
         {
             lock (updateLock)
             {
@@ -48,7 +48,11 @@ namespace VagabondK.Interface
                 getter = CreateGetter(target, propertyName);
                 setter = CreateSetter(target, propertyName);
                 if (getter != null)
-                    SetLocalValue(getter(), DateTime.Now);
+                {
+                    var value = getter();
+                    DateTime? timeStamp = DateTime.Now;
+                    SetLocalValue(ref value, ref timeStamp);
+                }
             }
             else
             {
@@ -220,8 +224,9 @@ namespace VagabondK.Interface
                 && (Mode == InterfaceMode.TwoWay || Mode == InterfaceMode.SendOnly)
                 && memberType != null && !isUpdating && e.PropertyName == PropertyName)
             {
-                if (!await SendAsync(getter()) && RollbackOnSendError)
-                    UpdatePropertyValue(Value, ErrorDirection.Indeterminate);
+                var value = getter();
+                if (!await SendAsync(value) && RollbackOnSendError)
+                    UpdatePropertyValue(ref this.value, ErrorDirection.Indeterminate);
             }
         }
 
@@ -237,11 +242,10 @@ namespace VagabondK.Interface
             Target = target;
             PropertyName = propertyName;
             RollbackOnSendError = rollbackOnSendError;
-            Received += OnReceived;
         }
 
-        private void OnReceived(InterfacePoint point, TValue value, DateTime? timeStamp)
-            => UpdatePropertyValue(value, ErrorDirection.Receiving);
+        protected override void OnReceived(ref TValue value, ref DateTime? timeStamp)
+            => UpdatePropertyValue(ref value, ErrorDirection.Receiving);
 
         public object Target
         {
@@ -330,7 +334,7 @@ namespace VagabondK.Interface
         {
             if (await SendAsync(value, timeStamp))
             {
-                UpdatePropertyValue(value, ErrorDirection.Sending);
+                UpdatePropertyValue(ref value, ErrorDirection.Sending);
                 return true;
             }
             return false;

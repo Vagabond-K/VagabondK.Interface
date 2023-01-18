@@ -40,12 +40,12 @@ namespace VagabondK.Interface.Abstractions
         public bool SendLocalValue()
             => GetLastUpdatedHandler()?.SendLocalValue() ?? false;
 
-        internal void SetReceivedValue<TValue>(TValue value, DateTime? timeStamp)
+        internal void SetReceivedValue<TValue>(ref TValue value, ref DateTime? timeStamp)
         {
             lock (handlers)
                 foreach (var handler in handlers.Select(reference => reference.TryGetTarget(out var target) ? target : null))
-                    if (handler is InterfaceHandler<TValue> interfaceHandler) interfaceHandler.SetReceivedValue(value, timeStamp);
-                    else handler.SetReceivedOtherTypeValue(value, timeStamp);
+                    if (handler is InterfaceHandler<TValue> interfaceHandler) interfaceHandler.SetReceivedValue(ref value, ref timeStamp);
+                    else handler.SetReceivedOtherTypeValue(ref value, ref timeStamp);
         }
 
         public void Add(InterfaceHandler handler)

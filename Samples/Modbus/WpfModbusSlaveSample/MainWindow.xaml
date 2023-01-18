@@ -1,12 +1,15 @@
-﻿<Window x:Class="WpfModbusSlaveSample.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WpfModbusSlaveSample"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+﻿<vk:ThemeWindow
+    x:Class="WpfModbusSlaveSample.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vk="http://schemas.vagabond-k.com/winfx/2016/xaml"
+    xmlns:local="clr-namespace:WpfModbusSlaveSample"
+    mc:Ignorable="d"
+    Background="Transparent"
+    Title="Modbus Slave" Height="450" Width="800">
     <Grid>
         
     </Grid>
-</Window>
+</vk:ThemeWindow>

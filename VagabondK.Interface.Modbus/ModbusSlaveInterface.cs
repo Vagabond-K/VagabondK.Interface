@@ -178,7 +178,7 @@ namespace VagabondK.Interface.Modbus
 
         private void OnRequestedWriteCoil(object sender, RequestedWriteCoilEventArgs e)
         {
-            var timeStamp = DateTime.Now;
+            DateTime? timeStamp = DateTime.Now;
             ModbusBooleanPoint[] points = null;
             lock (addressMaps)
                 if (addressMaps.TryGetValue(e.SlaveAddress, out var addressMap))
@@ -189,7 +189,8 @@ namespace VagabondK.Interface.Modbus
                 foreach (var point in points)
                     try
                     {
-                        SetReceivedValue(point, e.Values[point.Address - e.Address], timeStamp);
+                        var value = e.Values[point.Address - e.Address];
+                        SetReceivedValue(point, ref value, ref timeStamp);
                     }
                     catch (Exception ex)
                     {
@@ -220,9 +221,9 @@ namespace VagabondK.Interface.Modbus
 
         public ModbusSlaveService Service { get; }
 
-        protected override Task<bool> OnSendRequestedAsync<TValue>(ModbusPoint point, TValue value, DateTime? timeStamp)
-            => Task.Run(() => OnSendRequested(point, value, timeStamp));
-        protected override bool OnSendRequested<TValue>(ModbusPoint point, TValue value, DateTime? timeStamp)
+        protected override Task<bool> OnSendRequestedAsync<TValue>(ModbusPoint point, ref TValue value, ref DateTime? timeStamp)
+            => Task.FromResult(OnSendRequested(point, ref value, ref timeStamp));
+        protected override bool OnSendRequested<TValue>(ModbusPoint point, ref TValue value, ref DateTime? timeStamp)
         {
             ModbusSlave modbusSlave = null;
             var slaveAddress = point.SlaveAddress;
@@ -262,20 +263,16 @@ namespace VagabondK.Interface.Modbus
                     }
                 if (points != null)
                     foreach (var refPoint in points)
-                        SetReceivedValue(refPoint, value, timeStamp);
+                        SetReceivedValue(refPoint, ref value, ref timeStamp);
             }
 
             return result;
         }
 
         void IModbusInterface.SetReceivedValue<TValue, TValuePoint>(TValuePoint point, TValue value, DateTime? timeStamp)
-            => SetReceivedValue(point, value, timeStamp);
+            => SetReceivedValue(point, ref value, ref timeStamp);
 
         public IEnumerable<InterfaceHandler> SetBindings(object target, byte slaveAddress)
-            => SetBindings(target, handler =>
-            {
-                if (handler.Point is ModbusPoint modbusPoint)
-                    modbusPoint.SlaveAddress = slaveAddress;
-            });
+            => SetBindings(target, point => { point.SlaveAddress = slaveAddress; });
     }
 }

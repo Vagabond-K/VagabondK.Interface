@@ -4,6 +4,10 @@
              xmlns:local="clr-namespace:WpfModbusMasterSample"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <vk:ThemeResourceDictionary xmlns:vk="http://schemas.vagabond-k.com/winfx/2016/xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

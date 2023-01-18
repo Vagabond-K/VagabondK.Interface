@@ -55,14 +55,14 @@ namespace VagabondK.Interface.Modbus
             lock (settingChangedLock) isSettingChanged = true;
         }
 
-        protected override Task<bool> OnSendRequestedAsync<TValue>(ModbusPoint point, TValue value, DateTime? timeStamp)
+        protected override Task<bool> OnSendRequestedAsync<TValue>(ModbusPoint point, ref TValue value, ref DateTime? timeStamp)
             => (point as ModbusPoint<TValue>)?.Send(Master, value) ?? point?.Send(Master, value) ?? Task.FromResult(false);
-        protected override bool OnSendRequested<TValue>(ModbusPoint point, TValue value, DateTime? timeStamp)
+        protected override bool OnSendRequested<TValue>(ModbusPoint point, ref TValue value, ref DateTime? timeStamp)
             => ((point as ModbusPoint<TValue>)?.Send(Master, value) ?? point?.Send(Master, value) ?? Task.FromResult(false)).Result;
 
 
         void IModbusInterface.SetReceivedValue<TValue, TValuePoint>(TValuePoint point, TValue value, DateTime? timeStamp)
-            => SetReceivedValue(point, value, timeStamp);
+            => SetReceivedValue(point, ref value, ref timeStamp);
 
         protected override void OnCreatePollingRequests()
         {
@@ -153,7 +153,7 @@ namespace VagabondK.Interface.Modbus
                 try
                 {
                     var response = Master.Request(request);
-                    var timeStamp = DateTime.Now;
+                    DateTime? timeStamp = DateTime.Now;
 
                     if (response is ModbusReadResponse)
                     {
@@ -170,7 +170,8 @@ namespace VagabondK.Interface.Modbus
                                             try
                                             {
                                                 var index = point.Address - request.Address;
-                                                SetReceivedValue(booleanPoint, values[index], timeStamp);
+                                                var value = values[index];
+                                                SetReceivedValue(booleanPoint, ref value, ref timeStamp);
                                             }
                                             catch (Exception ex)
                                             {
@@ -239,10 +240,6 @@ namespace VagabondK.Interface.Modbus
         public int DelayBetweenRequests { get; set; }
 
         public IEnumerable<InterfaceHandler> SetBindings(object target, byte slaveAddress)
-            => SetBindings(target, handler =>
-            {
-                if (handler.Point is ModbusPoint modbusPoint)
-                    modbusPoint.SlaveAddress = slaveAddress;
-            });
+            => SetBindings(target, point => { point.SlaveAddress = slaveAddress; });
     }
 }

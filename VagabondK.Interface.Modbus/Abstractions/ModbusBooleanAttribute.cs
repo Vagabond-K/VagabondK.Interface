@@ -1,6 +1,6 @@
 ﻿namespace VagabondK.Interface.Modbus.Abstractions
 {
-    public abstract class ModbusBooleanAttribute : ModbusAttribute
+    public abstract class ModbusBooleanAttribute : ModbusBindingAttribute
     {
         protected ModbusBooleanAttribute(ushort address) : base(address) { }
         protected ModbusBooleanAttribute(byte slaveAddress, ushort address) : base(slaveAddress, address) { }

@@ -5,7 +5,7 @@ using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus.Abstractions
 {
-    public abstract class ModbusRegisterAttribute : ModbusAttribute
+    public abstract class ModbusRegisterAttribute : ModbusBindingAttribute
     {
         protected ModbusRegisterAttribute(ushort address) : base(address) { }
         protected ModbusRegisterAttribute(byte slaveAddress, ushort address) : base(slaveAddress, address) { }
@@ -22,7 +22,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         public bool UnixTimeIsMilliseconds { get; set; }
         public int UnixTimeScalePowerOf10 { get; set; }
 
-        internal InterfacePoint OnCreatePoint(MemberInfo memberInfo, bool writable, bool? useMultiWriteFunction = null)
+        internal InterfacePoint OnCreatePoint(MemberInfo memberInfo, InterfaceAttribute rootAttribute, bool writable, bool? useMultiWriteFunction = null)
         {
             Type memberType;
             if (memberInfo is PropertyInfo property)
@@ -35,7 +35,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
             switch (typeName)
             {
                 case nameof(Boolean):
-                    return new ModbusBitFlagPoint(GetSlaveAddress(memberInfo.ReflectedType), writable, Address, BitIndex, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                    return new ModbusBitFlagPoint(GetSlaveAddress(rootAttribute), writable, Address, BitIndex, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(SByte):
                 case nameof(Byte):
                 case nameof(Int16):
@@ -49,17 +49,17 @@ namespace VagabondK.Interface.Modbus.Abstractions
                     var numericPointType = typeof(ModbusPoint).Assembly.GetType($"{nameof(VagabondK)}.{nameof(Interface)}.{nameof(Modbus)}.Modbus{typeName}Point`1");
                     if (numericPointType == null) return null;
                     var pointType = numericPointType.MakeGenericType(memberType);
-                    return (InterfacePoint)Activator.CreateInstance(pointType, GetSlaveAddress(memberInfo.ReflectedType), writable, Address, Scale, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                    return (InterfacePoint)Activator.CreateInstance(pointType, GetSlaveAddress(rootAttribute), writable, Address, Scale, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(DateTime):
-                    return new ModbusDateTimePoint(GetSlaveAddress(memberInfo.ReflectedType), writable, Address, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                    return new ModbusDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case "Byte[]":
-                    return new ModbusByteArrayPoint(GetSlaveAddress(memberInfo.ReflectedType), writable, Address,
+                    return new ModbusByteArrayPoint(GetSlaveAddress(rootAttribute), writable, Address,
                         BytesLength, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(String):
-                    return new ModbusStringPoint(GetSlaveAddress(memberInfo.ReflectedType), writable, Address,
+                    return new ModbusStringPoint(GetSlaveAddress(rootAttribute), writable, Address,
                         BytesLength, System.Text.Encoding.GetEncoding(Encoding), SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(DateTimeOffset):
-                    return new ModbusUnixTimePoint(GetSlaveAddress(memberInfo.ReflectedType), writable, Address, UnixTimeIsMilliseconds, UnixTimeScalePowerOf10,
+                    return new ModbusUnixTimePoint(GetSlaveAddress(rootAttribute), writable, Address, UnixTimeIsMilliseconds, UnixTimeScalePowerOf10,
                         BytesLength, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 default:
                     return null;

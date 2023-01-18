@@ -35,7 +35,7 @@ namespace SimpleModbusMasterSample
                 //}
             };
 
-            modbus.SetBindings(localObject, 4);
+            modbus.SetBindings(localObject);
 
 
 
@@ -58,8 +58,8 @@ namespace SimpleModbusMasterSample
                 while (true)
                 {
                     //localObject.Coil1 = !localObject.Coil1;
-                    //localObject.Single3 = localObject.Single3 + 1;
-                    System.Threading.Thread.Sleep(100);
+                    localObject.Single3 = localObject.Single3 + 1;
+                    System.Threading.Thread.Sleep(1000);
                 }
             });
             Console.ReadKey();
@@ -80,7 +80,7 @@ namespace SimpleModbusMasterSample
 
     }
 
-    [ModbusSlaveAddress(0)]
+    [Modbus(0)]
     class LocalObjectBase : NotifyPropertyChangeObject
     {
         //[ModbusDI(0)]
@@ -124,7 +124,7 @@ namespace SimpleModbusMasterSample
         public bool Bit16 { get => Get(false); set => Set(value); }
     }
 
-    [ModbusSlaveAddress(1)]
+    [Modbus(1)]
     class LocalObject : LocalObjectBase
     {
         //[ModbusCoil(0)]
@@ -161,7 +161,7 @@ namespace SimpleModbusMasterSample
         }
     }
 
-    [ModbusSlaveAddress(1)]
+    [Modbus(1)]
     class LocalObject2 : INotifyPropertyChanged
     {
         public LocalObject2()
@@ -202,7 +202,7 @@ namespace SimpleModbusMasterSample
         }
     }
 
-    [ModbusSlaveAddress(1)]
+    [Modbus(1)]
     class LocalObject3 : INotifyPropertyChanged, INotifyPropertyChanging
     {
         public LocalObject3()

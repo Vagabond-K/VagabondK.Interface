@@ -11,6 +11,6 @@ namespace VagabondK.Interface.Modbus
         public ModbusIRAttribute(ushort address, ushort requestAddress, ushort requestLength) : base(address, requestAddress, requestLength) { }
         public ModbusIRAttribute(byte slaveAddress, ushort address, ushort requestAddress, ushort requestLength) : base(slaveAddress, address, requestAddress, requestLength) { }
 
-        protected override InterfacePoint OnCreatePoint(MemberInfo memberInfo) => OnCreatePoint(memberInfo, false);
+        protected override InterfacePoint OnCreatePoint(MemberInfo memberInfo, InterfaceAttribute rootAttribute) => OnCreatePoint(memberInfo, rootAttribute, false);
     }
 }

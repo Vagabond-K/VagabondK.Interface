@@ -16,11 +16,11 @@ namespace VagabondK.Interface.Abstractions
 
         protected virtual void OnAdded(TPoint point) { }
         protected virtual void OnRemoved(TPoint point) { }
-        protected abstract Task<bool> OnSendRequestedAsync<TValue>(TPoint point, TValue value, DateTime? timeStamp);
-        protected abstract bool OnSendRequested<TValue>(TPoint point, TValue value, DateTime? timeStamp);
+        protected abstract Task<bool> OnSendRequestedAsync<TValue>(TPoint point, ref TValue value, ref DateTime? timeStamp);
+        protected abstract bool OnSendRequested<TValue>(TPoint point, ref TValue value, ref DateTime? timeStamp);
 
-        protected void SetReceivedValue<TValue>(TPoint point, TValue value, DateTime? timeStamp)
-            => point?.SetReceivedValue(value, timeStamp);
+        protected void SetReceivedValue<TValue>(TPoint point, ref TValue value, ref DateTime? timeStamp)
+            => point?.SetReceivedValue(ref value, ref timeStamp);
 
         protected void ErrorOccurredAt(TPoint point, Exception exception, ErrorDirection direction)
             => point?.RaiseErrorOccurred(exception, direction);
@@ -75,8 +75,7 @@ namespace VagabondK.Interface.Abstractions
         {
             try
             {
-                var result = await OnSendRequestedAsync((TPoint)point, value, timeStamp);
-                return result;
+                return  await OnSendRequestedAsync((TPoint)point, ref value, ref timeStamp);
             }
             catch (Exception ex)
             {
@@ -85,11 +84,11 @@ namespace VagabondK.Interface.Abstractions
             return false;
         }
 
-        bool IInterface.Send<TValue>(InterfacePoint point, TValue value, DateTime? timeStamp)
+        bool IInterface.Send<TValue>(InterfacePoint point, ref TValue value, ref DateTime? timeStamp)
         {
             try
             {
-                var result = OnSendRequested((TPoint)point, value, timeStamp);
+                var result = OnSendRequested((TPoint)point, ref value, ref timeStamp);
                 return result;
             }
             catch (Exception ex)
@@ -131,13 +130,16 @@ namespace VagabondK.Interface.Abstractions
             return point.SetBinding<TValue>(target, propertyName, mode, rollbackOnSendError);
         }
 
-        public IEnumerable<InterfaceHandler> SetBindings(object target) => SetBindings(target, null);
-        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, Action<InterfaceHandler> initHandler)
+        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot) => SetBindings(targetRoot, null, null);
+        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, Action<TPoint> initPoint) => SetBindings(targetRoot, initPoint, null);
+        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, Action<InterfaceHandler> initHandler) => SetBindings(targetRoot, null, initHandler);
+        private IEnumerable<InterfaceHandler> SetBindings(object targetRoot, Action<TPoint> initPoint, Action<InterfaceHandler> initHandler)
         {
             if (targetRoot == null) return Enumerable.Empty<InterfaceHandler>();
 
             var result = new List<InterfaceHandler>();
 
+            InterfaceAttribute rootAttribute = null;
             var objects = new HashSet<object>();
             var queue = new Queue();
             queue.Enqueue(targetRoot);
@@ -148,9 +150,15 @@ namespace VagabondK.Interface.Abstractions
                 if (!objects.Add(target)) continue;
 
                 var targetType = target.GetType();
+                var interfaceAttribute = targetType.GetCustomAttributes(typeof(InterfaceAttribute), true).FirstOrDefault(iAttr => (iAttr as InterfaceAttribute)?.InterfacePointType == typeof(TPoint));
+                if (interfaceAttribute == null) continue;
+
+                if (rootAttribute == null)
+                    rootAttribute = interfaceAttribute as InterfaceAttribute;
+
                 foreach (var memberInfo in targetType.GetMembers(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
                 {
-                    var attributes = memberInfo.GetCustomAttributes(typeof(InterfaceAttribute), true);
+                    var attributes = memberInfo.GetCustomAttributes(typeof(InterfaceBindingAttribute), true);
 
                     Type memberType;
                     object subObject = null;
@@ -170,16 +178,17 @@ namespace VagabondK.Interface.Abstractions
 
                     foreach (var attribute in attributes)
                     {
-                        if (attribute is InterfaceAttribute interfaceAttribute
-                            && interfaceAttribute.GetPoint(memberInfo) is TPoint point)
+                        if (attribute is InterfaceBindingAttribute bindingAttribute
+                            && bindingAttribute.GetPoint(memberInfo, rootAttribute) is TPoint point)
                         {
                             var handler = (InterfaceHandler)Activator.CreateInstance(typeof(InterfaceBinding<>).MakeGenericType(memberType));
                             var binding = handler as IInterfaceBinding;
                             binding.Target = target;
                             binding.PropertyName = memberInfo.Name;
-                            binding.Mode = interfaceAttribute.Mode;
-                            binding.RollbackOnSendError = interfaceAttribute.RollbackOnSendError;
+                            binding.Mode = bindingAttribute.Mode;
+                            binding.RollbackOnSendError = bindingAttribute.RollbackOnSendError;
                             point.Add(handler);
+                            initPoint?.Invoke(point);
                             initHandler?.Invoke(handler);
 
                             Add(point);

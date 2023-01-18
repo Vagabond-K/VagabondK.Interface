@@ -20,7 +20,7 @@ namespace SimpleModbusSlaveSample
             var slave = new ModbusSlaveInterface(slaveService);
             var target = new LocalObject();
 
-            foreach (var handler in slave.SetBindings(target, 4))
+            foreach (var handler in slave.SetBindings(target))
                 handler.Point.SendLocalValue();
 
             channel.Start();
@@ -35,14 +35,14 @@ namespace SimpleModbusSlaveSample
                 //var array = slaveService[1].HoldingRegisters.GetRawData(410, 2).ToArray();
                 //Console.WriteLine($"{array[0]}, {array[1]}");
 
-                System.Threading.Thread.Sleep(100);
+                System.Threading.Thread.Sleep(1000);
             }
 
             Console.ReadKey();
         }
     }
 
-    [ModbusSlaveAddress(1)]
+    [Modbus(1)]
     class LocalObject : NotifyPropertyChangeObject
     {
         [ModbusDI(10)]
