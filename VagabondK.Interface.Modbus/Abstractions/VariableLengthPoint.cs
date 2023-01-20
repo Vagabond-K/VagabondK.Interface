@@ -6,11 +6,11 @@ using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus.Abstractions
 {
-    public abstract class ModbusVariableLengthPoint<TValue> : ModbusMultiBytesPoint<TValue>
+    public abstract class VariableLengthPoint<TValue> : MultiBytesPoint<TValue>
     {
         private int bytesLength = 2;
 
-        protected ModbusVariableLengthPoint(byte slaveAddress, bool writable, ushort address, int bytesLength, bool skipFirstByte, ModbusEndian endian, ushort? requestAddress, ushort? requestLength, bool? useMultiWriteFunction, IEnumerable<InterfaceHandler> handlers)
+        protected VariableLengthPoint(byte slaveAddress, bool writable, ushort address, int bytesLength, bool skipFirstByte, ModbusEndian endian, ushort? requestAddress, ushort? requestLength, bool? useMultiWriteFunction, IEnumerable<InterfaceHandler> handlers)
             : base(slaveAddress, writable, address, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers)
         {
             this.bytesLength = bytesLength;

@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="VagabondK.Protocols.Modbus" Version="1.0.22" />
+    <PackageReference Include="VagabondK.Protocols.Modbus" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>

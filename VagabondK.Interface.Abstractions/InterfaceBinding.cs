@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net.Security;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using VagabondK.Interface.Abstractions;
 
@@ -24,7 +21,7 @@ namespace VagabondK.Interface
         private Action<TValue> setter;
         private bool isUpdating;
 
-        private void UpdatePropertyValue(ref TValue value, bool isReceiving = false)
+        private void UpdatePropertyValue(in TValue value, bool isReceiving = false)
         {
             lock (updateLock)
             {
@@ -54,7 +51,7 @@ namespace VagabondK.Interface
                 {
                     var value = getter();
                     DateTime? timeStamp = DateTime.Now;
-                    SetLocalValue(ref value, ref timeStamp);
+                    SetLocalValue(value, timeStamp);
                 }
             }
             else
@@ -206,10 +203,10 @@ namespace VagabondK.Interface
                     if (point.IsWaitSending)
                     {
                         cancel(e);
-                        if (await point.OnSendAsyncRequested(newValue))
-                            UpdatePropertyValue(ref newValue);
+                        if (await point.OnSendAsyncRequested(newValue, null, null))
+                            UpdatePropertyValue(newValue);
                     }
-                    else if (!point.OnSendRequested(newValue))
+                    else if (!point.OnSendRequested(newValue, null))
                         cancel(e);
                 }
                 else if (Target is INotifyPropertyChanged notifyPropertyChanged)
@@ -236,8 +233,8 @@ namespace VagabondK.Interface
                 && memberType != null && !isUpdating && e.PropertyName == PropertyName)
             {
                 var value = getter();
-                if (!(!point.IsWaitSending ? point.OnSendRequested(value) : await point.OnSendAsyncRequested(value)) && RollbackOnSendError)
-                    UpdatePropertyValue(ref this.value);
+                if (!(!point.IsWaitSending ? point.OnSendRequested(value, null) : await point.OnSendAsyncRequested(value, null, null)) && RollbackOnSendError)
+                    UpdatePropertyValue(this.value);
             }
         }
 
@@ -255,8 +252,8 @@ namespace VagabondK.Interface
             RollbackOnSendError = rollbackOnSendError;
         }
 
-        protected override void OnReceived(ref TValue value, ref DateTime? timeStamp)
-            => UpdatePropertyValue(ref value, true);
+        protected override void OnReceived(in TValue value, in DateTime? timeStamp)
+            => UpdatePropertyValue(value, true);
 
         public object Target
         {
@@ -289,6 +286,7 @@ namespace VagabondK.Interface
                 }
             }
         }
+
         public string PropertyName
         {
             get => propertyName;
@@ -340,27 +338,26 @@ namespace VagabondK.Interface
             }
         }
 
-        public Task<bool> SendAsyncAndUpdateProperty(TValue value) => SendAsyncAndUpdateProperty(value, null);
+        public Task<bool> SendAsyncAndUpdateProperty(in TValue value) => SendAsyncAndUpdateProperty(value, null);
         public async Task<bool> SendAsyncAndUpdateProperty(TValue value, DateTime? timeStamp)
         {
-            if (await Point?.OnSendAsyncRequested(value, timeStamp))
+            if (await SendAsync(value, timeStamp, null))
             {
-                UpdatePropertyValue(ref value);
+                UpdatePropertyValue(value);
                 return true;
             }
             return false;
         }
 
-        public bool SendAndUpdateProperty(TValue value) => SendAndUpdateProperty(value, null);
-        public bool SendAndUpdateProperty(TValue value, DateTime? timeStamp)
+        public bool SendAndUpdateProperty(in TValue value) => SendAndUpdateProperty(value, null);
+        public bool SendAndUpdateProperty(in TValue value, in DateTime? timeStamp)
         {
-            if (Point?.OnSendRequested(value, timeStamp) ?? false)
+            if (Send(value, timeStamp))
             {
-                UpdatePropertyValue(ref value);
+                UpdatePropertyValue(value);
                 return true;
             }
             return false;
         }
-
     }
 }

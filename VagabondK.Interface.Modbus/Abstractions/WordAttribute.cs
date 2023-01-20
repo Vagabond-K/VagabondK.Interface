@@ -5,12 +5,12 @@ using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus.Abstractions
 {
-    public abstract class ModbusRegisterAttribute : ModbusBindingAttribute
+    public abstract class WordAttribute : ModbusBindingAttribute
     {
-        protected ModbusRegisterAttribute(ushort address) : base(address) { }
-        protected ModbusRegisterAttribute(byte slaveAddress, ushort address) : base(slaveAddress, address) { }
-        protected ModbusRegisterAttribute(ushort address, ushort requestAddress, ushort requestLength) : base(address, requestAddress, requestLength) { }
-        protected ModbusRegisterAttribute(byte slaveAddress, ushort address, ushort requestAddress, ushort requestLength) : base(slaveAddress, address, requestAddress, requestLength) { }
+        protected WordAttribute(ushort address) : base(address) { }
+        protected WordAttribute(byte slaveAddress, ushort address) : base(slaveAddress, address) { }
+        protected WordAttribute(ushort address, ushort requestAddress, ushort requestLength) : base(address, requestAddress, requestLength) { }
+        protected WordAttribute(byte slaveAddress, ushort address, ushort requestAddress, ushort requestLength) : base(slaveAddress, address, requestAddress, requestLength) { }
 
         public Type Type { get; set; }
         public int BytesLength { get; set; } = 2;
@@ -22,7 +22,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         public bool UnixTimeIsMilliseconds { get; set; }
         public int UnixTimeScalePowerOf10 { get; set; }
 
-        internal InterfacePoint OnCreatePoint(MemberInfo memberInfo, InterfaceAttribute rootAttribute, bool writable, bool? useMultiWriteFunction = null)
+        internal protected InterfacePoint OnCreatePoint(MemberInfo memberInfo, InterfaceAttribute rootAttribute, bool writable, bool? useMultiWriteFunction = null)
         {
             Type memberType;
             if (memberInfo is PropertyInfo property)
@@ -35,7 +35,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
             switch (typeName)
             {
                 case nameof(Boolean):
-                    return new ModbusBitFlagPoint(GetSlaveAddress(rootAttribute), writable, Address, BitIndex, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                    return new BitFlagPoint(GetSlaveAddress(rootAttribute), writable, Address, BitIndex, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(SByte):
                 case nameof(Byte):
                 case nameof(Int16):
@@ -46,20 +46,20 @@ namespace VagabondK.Interface.Modbus.Abstractions
                 case nameof(UInt64):
                 case nameof(Single):
                 case nameof(Double):
-                    var numericPointType = typeof(ModbusPoint).Assembly.GetType($"{nameof(VagabondK)}.{nameof(Interface)}.{nameof(Modbus)}.Modbus{typeName}Point`1");
+                    var numericPointType = typeof(ModbusPoint).Assembly.GetType($"{nameof(VagabondK)}.{nameof(Interface)}.{nameof(Modbus)}.{typeName}Point`1");
                     if (numericPointType == null) return null;
                     var pointType = numericPointType.MakeGenericType(memberType);
                     return (InterfacePoint)Activator.CreateInstance(pointType, GetSlaveAddress(rootAttribute), writable, Address, Scale, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(DateTime):
-                    return new ModbusDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                    return new DotNetDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case "Byte[]":
-                    return new ModbusByteArrayPoint(GetSlaveAddress(rootAttribute), writable, Address,
+                    return new ByteArrayPoint(GetSlaveAddress(rootAttribute), writable, Address,
                         BytesLength, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(String):
-                    return new ModbusStringPoint(GetSlaveAddress(rootAttribute), writable, Address,
+                    return new StringPoint(GetSlaveAddress(rootAttribute), writable, Address,
                         BytesLength, System.Text.Encoding.GetEncoding(Encoding), SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(DateTimeOffset):
-                    return new ModbusUnixTimePoint(GetSlaveAddress(rootAttribute), writable, Address, UnixTimeIsMilliseconds, UnixTimeScalePowerOf10,
+                    return new UnixTimePoint(GetSlaveAddress(rootAttribute), writable, Address, UnixTimeIsMilliseconds, UnixTimeScalePowerOf10,
                         BytesLength, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 default:
                     return null;

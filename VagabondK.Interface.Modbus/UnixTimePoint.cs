@@ -8,7 +8,7 @@ using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus
 {
-    public class ModbusUnixTimePoint : ModbusVariableLengthPoint<DateTimeOffset>
+    public class UnixTimePoint : VariableLengthPoint<DateTimeOffset>
     {
         private bool isMilliseconds;
         private int scalePowerOf10;
@@ -28,7 +28,7 @@ namespace VagabondK.Interface.Modbus
         /// <param name="requestLength">요청을 위한 데이터 개수</param>
         /// <param name="useMultiWriteFunction">쓰기 요청 시 다중 쓰기 Function(0x10) 사용 여부, Holding Register일 경우만 적용되고 Input Register일 경우는 무시함</param>
         /// <param name="handlers">인터페이스 처리기 열거</param>
-        public ModbusUnixTimePoint(byte slaveAddress = 0, bool writable = true, ushort address = 0, bool isMilliseconds = false, int scalePowerOf10 = 0, int bytesLength = 4, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
+        public UnixTimePoint(byte slaveAddress = 0, bool writable = true, ushort address = 0, bool isMilliseconds = false, int scalePowerOf10 = 0, int bytesLength = 4, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
             : base(slaveAddress, writable, address, bytesLength, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers)
         {
             this.isMilliseconds = isMilliseconds;
@@ -39,7 +39,7 @@ namespace VagabondK.Interface.Modbus
         public bool IsMilliseconds { get => isMilliseconds; set => SetProperty(ref isMilliseconds, value); }
         public int ScalePowerOf10 { get => scalePowerOf10; set => SetProperty(ref scalePowerOf10, value); }
 
-        protected override byte[] GetBytes(DateTimeOffset value)
+        protected override byte[] GetBytes(in DateTimeOffset value)
         {
             var unixTime = IsMilliseconds
                 ? value.ToUnixTimeMilliseconds()

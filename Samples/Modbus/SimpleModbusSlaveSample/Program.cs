@@ -45,70 +45,70 @@ namespace SimpleModbusSlaveSample
     [Modbus(1)]
     class LocalObject : NotifyPropertyChangeObject
     {
-        [ModbusDI(10)]
+        [DiscreteInput(10)]
         public bool DI1 { get => Get(true); set => Set(value); }
-        [ModbusDI(11)]
+        [DiscreteInput(11)]
         public bool DI2 { get => Get(true); set => Set(value); }
-        [ModbusDI(10)]
+        [DiscreteInput(10)]
         public bool DI3 { get => Get(true); set => Set(value); }
 
-        [ModbusCoil(10)]
+        [Coil(10)]
         public bool Coil1 { get => Get(false); set => Set(value); }
-        [ModbusCoil(11)]
+        [Coil(11)]
         public bool Coil2 { get => Get(false); set => Set(value); }
-        [ModbusCoil(12)]
+        [Coil(12)]
         public bool Coil3 { get => Get(false); set => Set(value); }
 
-        [ModbusIR(100)]
+        [InputRegister(100)]
         public float Single1 { get => Get(123.4f); set => Set(value); }
-        [ModbusIR(102)]
+        [InputRegister(102)]
         public float Single2 { get => Get(456.7f); set => Set(value); }
 
-        [ModbusHR(400)]
+        [HoldingRegister(400)]
         public float Single3 { get => Get(0f); set => Set(value); }
 
-        [ModbusHR(410, SkipFirstByte = true)]
+        [HoldingRegister(410, SkipFirstByte = true)]
         public byte Byte1 { get => Get<byte>(0); set => Set(value); }
-        [ModbusHR(410)]
+        [HoldingRegister(410)]
         public byte Byte2 { get => Get<byte>(0); set => Set(value); }
 
-        [ModbusHR(411)]
+        [HoldingRegister(411)]
         public ushort BitFlags { get => Get<ushort>(0); set => Set(value); }
 
-        [ModbusHR(411, BitIndex = 0)]
+        [HoldingRegister(411, BitIndex = 0)]
         public bool Bit1 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 1)]
+        [HoldingRegister(411, BitIndex = 1)]
         public bool Bit2 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 2)]
+        [HoldingRegister(411, BitIndex = 2)]
         public bool Bit3 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 3)]
+        [HoldingRegister(411, BitIndex = 3)]
         public bool Bit4 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 4)]
+        [HoldingRegister(411, BitIndex = 4)]
         public bool Bit5 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 5)]
+        [HoldingRegister(411, BitIndex = 5)]
         public bool Bit6 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 6)]
+        [HoldingRegister(411, BitIndex = 6)]
         public bool Bit7 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 7)]
+        [HoldingRegister(411, BitIndex = 7)]
         public bool Bit8 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 8)]
+        [HoldingRegister(411, BitIndex = 8)]
         public bool Bit9 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 9)]
+        [HoldingRegister(411, BitIndex = 9)]
         public bool Bit10 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 10)]
+        [HoldingRegister(411, BitIndex = 10)]
         public bool Bit11 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 11)]
+        [HoldingRegister(411, BitIndex = 11)]
         public bool Bit12 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 12)]
+        [HoldingRegister(411, BitIndex = 12)]
         public bool Bit13 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 13)]
+        [HoldingRegister(411, BitIndex = 13)]
         public bool Bit14 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 14)]
+        [HoldingRegister(411, BitIndex = 14)]
         public bool Bit15 { get => Get(false); set => Set(value); }
-        [ModbusHR(411, BitIndex = 15)]
+        [HoldingRegister(411, BitIndex = 15)]
         public bool Bit16 { get => Get(false); set => Set(value); }
 
-        [ModbusHR(600, BytesLength = 10)]
+        [HoldingRegister(600, BytesLength = 10)]
         public string Text1 { get => Get("test"); set => Set(value); }
 
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace VagabondK.Interface.Abstractions
@@ -40,14 +41,14 @@ namespace VagabondK.Interface.Abstractions
         public bool SendLocalValue()
             => GetLastUpdatedHandler()?.SendLocalValue() ?? false;
 
-        protected void SetReceivedValue<TValue>(ref TValue value, ref DateTime? timeStamp)
+        protected void SetReceivedValue<TValue>(in TValue value, in DateTime? timeStamp)
         {
             lock (handlers)
                 foreach (var handler in handlers.Select(reference => reference.TryGetTarget(out var target) ? target : null))
                     try
                     {
-                        if (handler is InterfaceHandler<TValue> interfaceHandler) interfaceHandler.SetReceivedValue(ref value, ref timeStamp);
-                        else handler.SetReceivedOtherTypeValue(ref value, ref timeStamp);
+                        if (handler is InterfaceHandler<TValue> interfaceHandler) interfaceHandler.SetReceivedValue(value, timeStamp);
+                        else handler.SetReceivedOtherTypeValue(value, timeStamp);
                     }
                     catch (Exception ex)
                     {
@@ -57,8 +58,8 @@ namespace VagabondK.Interface.Abstractions
 
         public bool IsWaitSending => Interface is IWaitSendingInterface;
 
-        protected internal abstract Task<bool> OnSendAsyncRequested<TValue>(TValue value, DateTime? timeStamp = null);
-        protected internal abstract bool OnSendRequested<TValue>(TValue value, DateTime? timeStamp = null);
+        protected internal abstract Task<bool> OnSendAsyncRequested<TValue>(in TValue value, in DateTime? timeStamp, in CancellationToken? cancellationToken);
+        protected internal abstract bool OnSendRequested<TValue>(in TValue value, in DateTime? timeStamp);
 
         public void Add(InterfaceHandler handler)
         {

@@ -15,10 +15,10 @@ namespace VagabondK.Interface.Modbus
     {
         class AddressMap
         {
-            public Dictionary<ushort, List<ModbusBooleanPoint>> coils = new Dictionary<ushort, List<ModbusBooleanPoint>>();
-            public Dictionary<ushort, List<ModbusBooleanPoint>> discreteInput = new Dictionary<ushort, List<ModbusBooleanPoint>>();
-            public Dictionary<ushort, List<IModbusRegisterPoint>> holdingRegisters = new Dictionary<ushort, List<IModbusRegisterPoint>>();
-            public Dictionary<ushort, List<IModbusRegisterPoint>> inputRegisters = new Dictionary<ushort, List<IModbusRegisterPoint>>();
+            public Dictionary<ushort, List<BitPoint>> coils = new Dictionary<ushort, List<BitPoint>>();
+            public Dictionary<ushort, List<BitPoint>> discreteInput = new Dictionary<ushort, List<BitPoint>>();
+            public Dictionary<ushort, List<IModbusWordPoint>> holdingRegisters = new Dictionary<ushort, List<IModbusWordPoint>>();
+            public Dictionary<ushort, List<IModbusWordPoint>> inputRegisters = new Dictionary<ushort, List<IModbusWordPoint>>();
         }
 
         private readonly Dictionary<ushort, AddressMap> addressMaps = new Dictionary<ushort, AddressMap>();
@@ -53,38 +53,38 @@ namespace VagabondK.Interface.Modbus
                 if (!addressMaps.TryGetValue(slaveAddress, out var addressMap))
                     addressMaps[slaveAddress] = addressMap = new AddressMap();
 
-                if (point is IModbusRegisterPoint registerPoint)
+                if (point is IModbusWordPoint wordPoint)
                 {
-                    List<IModbusRegisterPoint> points;
+                    List<IModbusWordPoint> points;
                     if (point.Writable)
                     {
-                        registerPoint.SetRegisters(slave.HoldingRegisters);
+                        wordPoint.SetWords(slave.HoldingRegisters);
                         if (!addressMap.holdingRegisters.TryGetValue(point.Address, out points))
-                            addressMap.holdingRegisters[point.Address] = points = new List<IModbusRegisterPoint>();
+                            addressMap.holdingRegisters[point.Address] = points = new List<IModbusWordPoint>();
                     }
                     else
                     {
-                        registerPoint.SetRegisters(slave.InputRegisters);
+                        wordPoint.SetWords(slave.InputRegisters);
                         if (!addressMap.inputRegisters.TryGetValue(point.Address, out points))
-                            addressMap.inputRegisters[point.Address] = points = new List<IModbusRegisterPoint>();
+                            addressMap.inputRegisters[point.Address] = points = new List<IModbusWordPoint>();
                     }
-                    points.Add(registerPoint);
+                    points.Add(wordPoint);
                 }
-                else if (point is ModbusBooleanPoint booleanPoint)
+                else if (point is BitPoint bitPoint)
                 {
-                    List<ModbusBooleanPoint> points;
+                    List<BitPoint> points;
 
                     if (point.Writable)
                     {
                         if (!addressMap.coils.TryGetValue(point.Address, out points))
-                            addressMap.coils[point.Address] = points = new List<ModbusBooleanPoint>();
+                            addressMap.coils[point.Address] = points = new List<BitPoint>();
                     }
                     else
                     {
                         if (!addressMap.discreteInput.TryGetValue(point.Address, out points))
-                            addressMap.discreteInput[point.Address] = points = new List<ModbusBooleanPoint>();
+                            addressMap.discreteInput[point.Address] = points = new List<BitPoint>();
                     }
-                    points.Add(booleanPoint);
+                    points.Add(bitPoint);
                 }
             }
         }
@@ -109,26 +109,26 @@ namespace VagabondK.Interface.Modbus
 
                 if (addressMaps.TryGetValue(slaveAddress, out var addressMap))
                 {
-                    if (point is IModbusRegisterPoint registerPoint)
+                    if (point is IModbusWordPoint wordPoint)
                     {
-                        var registers = point.Writable ? addressMap.holdingRegisters : addressMap.inputRegisters;
+                        var words = point.Writable ? addressMap.holdingRegisters : addressMap.inputRegisters;
 
-                        if (registers.TryGetValue(point.Address, out var points))
+                        if (words.TryGetValue(point.Address, out var points))
                         {
-                            points.Remove(registerPoint);
+                            points.Remove(wordPoint);
                             if (points.Count == 0)
-                                registers.Remove(point.Address);
-                            registerPoint.SetRegisters(null);
+                                words.Remove(point.Address);
+                            wordPoint.SetWords(null);
                         }
                     }
-                    else if (point is ModbusBooleanPoint booleanPoint)
+                    else if (point is BitPoint bitPoint)
                     {
-                        var booleans = point.Writable ? addressMap.coils : addressMap.discreteInput;
-                        if (booleans.TryGetValue(point.Address, out var points))
+                        var bits = point.Writable ? addressMap.coils : addressMap.discreteInput;
+                        if (bits.TryGetValue(point.Address, out var points))
                         {
-                            points.Remove(booleanPoint);
+                            points.Remove(bitPoint);
                             if (points.Count == 0)
-                                booleans.Remove(point.Address);
+                                bits.Remove(point.Address);
                         }
                     }
                     if (addressMap.coils.Count == 0 && addressMap.holdingRegisters.Count == 0)
@@ -181,39 +181,39 @@ namespace VagabondK.Interface.Modbus
         private void OnRequestedWriteCoil(object sender, RequestedWriteCoilEventArgs e)
         {
             DateTime? timeStamp = DateTime.Now;
-            ModbusBooleanPoint[] points = null;
+            BitPoint[] points = null;
             lock (addressMaps)
                 if (addressMaps.TryGetValue(e.SlaveAddress, out var addressMap))
                     points = Enumerable.Range(e.Address, e.Values.Count).SelectMany(address =>
-                        addressMap.coils.TryGetValue((ushort)address, out var refPoints) ? refPoints : Enumerable.Empty<ModbusBooleanPoint>()).ToArray();
+                        addressMap.coils.TryGetValue((ushort)address, out var refPoints) ? refPoints : Enumerable.Empty<BitPoint>()).ToArray();
 
             if (points != null)
                 foreach (var point in points)
                 {
                     var value = e.Values[point.Address - e.Address];
-                    point.SetReceivedValue(ref value, ref timeStamp);
+                    point.SetReceivedValue(value, timeStamp);
                 }
         }
 
         private void OnRequestedWriteHoldingRegister(object sender, RequestedWriteHoldingRegisterEventArgs e)
         {
             DateTime? timeStamp = DateTime.Now;
-            IModbusRegisterPoint[] points = null;
+            IModbusWordPoint[] points = null;
             lock (addressMaps)
                 if (addressMaps.TryGetValue(e.SlaveAddress, out var addressMap))
-                    points = Enumerable.Range(e.Address, e.Registers.Count).SelectMany(address =>
-                        addressMap.holdingRegisters.TryGetValue((ushort)address, out var refPoints) ? refPoints : Enumerable.Empty<IModbusRegisterPoint>()).ToArray();
+                    points = Enumerable.Range(e.Address, e.Words.Count).SelectMany(address =>
+                        addressMap.holdingRegisters.TryGetValue((ushort)address, out var refPoints) ? refPoints : Enumerable.Empty<IModbusWordPoint>()).ToArray();
 
             if (points != null && Service.TryGetModbusSlave(e.SlaveAddress, out var modbusSlave))
                 foreach (var point in points)
-                    point.SetReceivedValue(modbusSlave.HoldingRegisters, ref timeStamp);
+                    point.SetReceivedValue(modbusSlave.HoldingRegisters, timeStamp);
         }
 
         public ModbusSlaveService Service { get; }
 
-        internal delegate bool SendToSlaveDelegate<TValue>(ModbusSlave slave, ref TValue value);
+        internal delegate bool SendToSlaveDelegate<TValue>(ModbusSlave slave, in TValue value);
 
-        internal bool OnSendRequested<TValue>(ModbusPoint<TValue> point, ref TValue value, ref DateTime? timeStamp, SendToSlaveDelegate<TValue> send)
+        internal bool OnSendRequested<TValue>(ModbusPoint<TValue> point, in TValue value, in DateTime? timeStamp, SendToSlaveDelegate<TValue> send)
         {
             ModbusSlave modbusSlave = null;
             var slaveAddress = point.SlaveAddress;
@@ -222,38 +222,38 @@ namespace VagabondK.Interface.Modbus
                 Service.TryGetModbusSlave(slaveAddress, out modbusSlave);
             if (modbusSlave == null) return false;
 
-            var result = send?.Invoke(modbusSlave, ref value) ?? false;
+            var result = send?.Invoke(modbusSlave, value) ?? false;
 
-            if (point is IModbusRegisterPoint registerPoint)
+            if (point is IModbusWordPoint wordPoint)
             {
-                ModbusRegisters registers = null;
-                IModbusRegisterPoint[] points = null;
+                ModbusWords words = null;
+                IModbusWordPoint[] points = null;
                 lock (addressMaps)
                     if (addressMaps.TryGetValue(slaveAddress, out var addressMap))
                     {
-                        var count = registerPoint.RegistersCount;
-                        registers = point.Writable ? modbusSlave.HoldingRegisters : modbusSlave.InputRegisters;
-                        var registerMap = point.Writable ? addressMap.holdingRegisters : addressMap.inputRegisters;
+                        var count = wordPoint.WordsCount;
+                        words = point.Writable ? modbusSlave.HoldingRegisters : modbusSlave.InputRegisters;
+                        var wordMap = point.Writable ? addressMap.holdingRegisters : addressMap.inputRegisters;
                         points = Enumerable.Range(pointAddress, count).SelectMany(address =>
-                            registerMap.TryGetValue((ushort)address, out var refPoints) ? refPoints.Where(refPoint => refPoint != point) : Enumerable.Empty<IModbusRegisterPoint>()).ToArray();
+                            wordMap.TryGetValue((ushort)address, out var refPoints) ? refPoints.Where(refPoint => refPoint != point) : Enumerable.Empty<IModbusWordPoint>()).ToArray();
                     }
 
                 if (points != null)
                     foreach (var refPoint in points)
-                        refPoint.SetReceivedValue(registers, ref timeStamp);
+                        refPoint.SetReceivedValue(words, timeStamp);
             }
-            else if (point is ModbusBooleanPoint booleanPoint)
+            else if (point is BitPoint bitPoint)
             {
-                ModbusBooleanPoint[] points = null;
+                BitPoint[] points = null;
                 lock (addressMaps)
                     if (addressMaps.TryGetValue(slaveAddress, out var addressMap))
                     {
                         if ((point.Writable ? addressMap.coils : addressMap.discreteInput).TryGetValue(pointAddress, out var refPoints))
-                            points = refPoints.Where(refPoint => refPoint != booleanPoint).ToArray();
+                            points = refPoints.Where(refPoint => refPoint != bitPoint).ToArray();
                     }
                 if (points != null)
                     foreach (var refPoint in points)
-                        (refPoint as ModbusPoint<TValue>)?.SetReceivedValue(ref value, ref timeStamp);
+                        (refPoint as ModbusPoint<TValue>)?.SetReceivedValue(value, timeStamp);
             }
 
             return result;

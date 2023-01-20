@@ -6,7 +6,7 @@ using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus
 {
-    public class ModbusSinglePoint<TValue> : ModbusNumericPoint<float, TValue>
+    public class UInt32Point<TValue> : NumericPoint<uint, TValue>
     {
         /// <summary>
         /// 생성자
@@ -21,14 +21,14 @@ namespace VagabondK.Interface.Modbus
         /// <param name="requestLength">요청을 위한 데이터 개수</param>
         /// <param name="useMultiWriteFunction">쓰기 요청 시 다중 쓰기 Function(0x10) 사용 여부, Holding Register일 경우만 적용되고 Input Register일 경우는 무시함</param>
         /// <param name="handlers">인터페이스 처리기 열거</param>
-        public ModbusSinglePoint(byte slaveAddress = 0, bool writable = true, ushort address = 0, double scale = 1, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
+        public UInt32Point(byte slaveAddress = 0, bool writable = true, ushort address = 0, double scale = 1, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
             : base(slaveAddress, writable, address, scale, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers) { }
 
-        protected override float Deserialize() => BitConverter.ToSingle(GetBytesFromRegisters(true), 0);
-        protected override byte[] Serialize(float serialize) => BitConverter.GetBytes(serialize);
+        protected override uint Deserialize() => BitConverter.ToUInt32(GetBytesFromRegisters(true), 0);
+        protected override byte[] Serialize(uint serialize) => BitConverter.GetBytes(serialize);
     }
 
-    public class ModbusSinglePoint : ModbusSinglePoint<float>
+    public class ModbusUInt32Point : UInt32Point<uint>
     {
         /// <summary>
         /// 생성자
@@ -42,7 +42,7 @@ namespace VagabondK.Interface.Modbus
         /// <param name="requestLength">요청을 위한 데이터 개수</param>
         /// <param name="useMultiWriteFunction">쓰기 요청 시 다중 쓰기 Function(0x10) 사용 여부, Holding Register일 경우만 적용되고 Input Register일 경우는 무시함</param>
         /// <param name="handlers">인터페이스 처리기 열거</param>
-        public ModbusSinglePoint(byte slaveAddress = 0, bool writable = true, ushort address = 0, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
+        public ModbusUInt32Point(byte slaveAddress = 0, bool writable = true, ushort address = 0, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
             : base(slaveAddress, writable, address, 1, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers) { }
     }
 }

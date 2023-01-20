@@ -22,13 +22,13 @@ namespace VagabondK.Interface.Modbus
             public ModbusPoint[] Points { get; }
         }
 
-        private const ushort maxBooleanLength = 2008;
-        private const ushort maxRegisterLength = 123;
+        private const ushort maxBitLength = 2008;
+        private const ushort maxWordLength = 123;
         private bool isSettingChanged = true;
         private readonly object settingChangedLock = new object();
         private readonly List<MergedReadRequest> readRequests = new List<MergedReadRequest>();
         private readonly List<Exception> pollingExceptions = new List<Exception>();
-        private readonly Dictionary<byte, ModbusRegisters> slaveRegisters = new Dictionary<byte, ModbusRegisters>();
+        private readonly Dictionary<byte, ModbusWords> slaveWords = new Dictionary<byte, ModbusWords>();
 
         public override event PollingCompletedEventHandler PollingCompleted;
 
@@ -70,7 +70,7 @@ namespace VagabondK.Interface.Modbus
                 var points = new List<ModbusPoint>();
                 foreach (var group in groups)
                 {
-                    ushort maxLength = group.Key.ObjectType == ModbusObjectType.Coil || group.Key.ObjectType == ModbusObjectType.DiscreteInput ? maxBooleanLength : maxRegisterLength;
+                    ushort maxLength = group.Key.ObjectType == ModbusObjectType.Coil || group.Key.ObjectType == ModbusObjectType.DiscreteInput ? maxBitLength : maxWordLength;
                     ushort? address = null;
                     ushort length = 0;
                     foreach (var request in group.OrderBy(g => g.Key.Address))
@@ -150,32 +150,32 @@ namespace VagabondK.Interface.Modbus
                         {
                             case ModbusObjectType.Coil:
                             case ModbusObjectType.DiscreteInput:
-                                if (response is ModbusReadBooleanResponse booleanResponse)
+                                if (response is ModbusReadBitResponse bitResponse)
                                 {
-                                    var values = booleanResponse.Values;
+                                    var values = bitResponse.Values;
                                     foreach (var point in request.Points)
-                                        if (point is ModbusBooleanPoint booleanPoint)
+                                        if (point is BitPoint bitPoint)
                                         {
                                             var index = point.Address - request.Address;
                                             var value = values[index];
-                                            booleanPoint.SetReceivedValue(ref value, ref timeStamp);
+                                            bitPoint.SetReceivedValue(value, timeStamp);
                                         }
                                 }
                                 break;
                             case ModbusObjectType.HoldingRegister:
                             case ModbusObjectType.InputRegister:
-                                if (response is ModbusReadRegisterResponse registerResponse)
+                                if (response is ModbusReadWordResponse wordResponse)
                                 {
-                                    if (!slaveRegisters.TryGetValue(request.SlaveAddress, out var registers))
+                                    if (!slaveWords.TryGetValue(request.SlaveAddress, out var words))
                                     {
-                                        registers = new ModbusRegisters();
-                                        slaveRegisters[request.SlaveAddress] = registers;
+                                        words = new ModbusWords();
+                                        slaveWords[request.SlaveAddress] = words;
                                     }
 
-                                    registers.Allocate(request.Address, (byte[])registerResponse.Bytes);
+                                    words.Allocate(request.Address, (byte[])wordResponse.Bytes);
                                     foreach (var point in request.Points)
-                                        if (point is IModbusRegisterPoint registerPoint)
-                                            registerPoint.SetReceivedValue(registers, ref timeStamp);
+                                        if (point is IModbusWordPoint wordPoint)
+                                            wordPoint.SetReceivedValue(words, timeStamp);
                                 }
                                 break;
                         }

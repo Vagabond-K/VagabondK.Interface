@@ -7,7 +7,7 @@ using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus.Abstractions
 {
-    public abstract class ModbusNumericPoint<TSerialize, TValue> : ModbusMultiBytesPoint<TValue>
+    public abstract class NumericPoint<TSerialize, TValue> : MultiBytesPoint<TValue>
     {
         private double scale = 1;
 
@@ -24,7 +24,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// <param name="requestLength">요청을 위한 데이터 개수</param>
         /// <param name="useMultiWriteFunction">쓰기 요청 시 다중 쓰기 Function(0x10) 사용 여부, Holding Register일 경우만 적용되고 Input Register일 경우는 무시함</param>
         /// <param name="handlers">인터페이스 처리기 열거</param>
-        protected ModbusNumericPoint(byte slaveAddress, bool writable, ushort address, double scale, bool skipFirstByte, ModbusEndian endian, ushort? requestAddress, ushort? requestLength, bool? useMultiWriteFunction, IEnumerable<InterfaceHandler> handlers)
+        protected NumericPoint(byte slaveAddress, bool writable, ushort address, double scale, bool skipFirstByte, ModbusEndian endian, ushort? requestAddress, ushort? requestLength, bool? useMultiWriteFunction, IEnumerable<InterfaceHandler> handlers)
             : base(slaveAddress, writable, address, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers)
         {
             this.scale = scale;
@@ -50,17 +50,17 @@ namespace VagabondK.Interface.Modbus.Abstractions
         protected abstract TSerialize Deserialize();
         protected abstract byte[] Serialize(TSerialize serialize);
 
-        protected override byte[] GetBytes(TValue value)
+        protected override byte[] GetBytes(in TValue value)
         {
             var bytes = typeof(TValue) == typeof(TSerialize) && scale == 1
-            ? (this as ModbusNumericPoint<TValue, TValue>).Serialize(value)
+            ? (this as NumericPoint<TValue, TValue>).Serialize(value)
             : Serialize(scale == 1 ? ToSerialize(value) : DoReverseScale(value));
 
             return ToBytesInRegisters(bytes, bytes.Length > 1);
         }
 
         protected override TValue GetValue() => typeof(TValue) == typeof(TSerialize) && scale == 1
-            ? (this as ModbusNumericPoint<TValue, TValue>).Deserialize()
+            ? (this as NumericPoint<TValue, TValue>).Deserialize()
             : scale == 1 ? ToValue(Deserialize()) : DoScale(Deserialize());
 
         public double Scale { get => scale; set => SetProperty(ref scale, value); }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Protocols.Modbus;
@@ -30,7 +31,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
             this.useMultiWriteFunction = useMultiWriteFunction;
         }
 
-        protected bool SetProperty<TProperty>(ref TProperty target, TProperty value, [CallerMemberName] string propertyName = null)
+        internal protected bool SetProperty<TProperty>(ref TProperty target, in TProperty value, [CallerMemberName] string propertyName = null)
         {
             if (!EqualityComparer<TProperty>.Default.Equals(target, value))
             {
@@ -75,22 +76,22 @@ namespace VagabondK.Interface.Modbus.Abstractions
         {
         }
 
-        protected abstract bool OnSendRequested(ModbusMaster master, ref TValue value);
-        protected abstract bool OnSendRequested(ModbusSlave slave, ref TValue value);
+        protected abstract bool OnSendRequested(ModbusMaster master, in TValue value);
+        protected abstract bool OnSendRequested(ModbusSlave slave, in TValue value);
 
-        internal new void SetReceivedValue(ref TValue value, ref DateTime? timeStamp)
-            => base.SetReceivedValue(ref value, ref timeStamp);
+        internal new void SetReceivedValue(in TValue value, in DateTime? timeStamp)
+            => base.SetReceivedValue(value, timeStamp);
 
         private ModbusMasterInterface masterInterface;
         private ModbusSlaveInterface slaveInterface;
 
-        private bool SendToMaster(ref TValue value, ref DateTime? timeStamp)
+        private bool SendToMaster(in TValue value, in DateTime? timeStamp)
         {
             var master = masterInterface?.Master;
-            return master != null && OnSendRequested(master, ref value);
+            return master != null && OnSendRequested(master, value);
         }
-        private bool SendToSlave(ref TValue value, ref DateTime? timeStamp)
-            => slaveInterface?.OnSendRequested(this, ref value, ref timeStamp, OnSendRequested) ?? false;
+        private bool SendToSlave(in TValue value, in DateTime? timeStamp)
+            => slaveInterface?.OnSendRequested(this, value, timeStamp, OnSendRequested) ?? false;
 
         internal override void Initialize()
         {
@@ -115,21 +116,25 @@ namespace VagabondK.Interface.Modbus.Abstractions
         }
 
         private SendDelegate send;
-        private delegate bool SendDelegate(ref TValue value, ref DateTime? timeStamp);
+        private delegate bool SendDelegate(in TValue value, in DateTime? timeStamp);
 
-        private bool Send<T>(ref T value, ref DateTime? timeStamp)
+        private bool Send<T>(in T value, in DateTime? timeStamp)
         {
             if (this is ModbusPoint<T> point)
-                return point.send?.Invoke(ref value, ref timeStamp) ?? false;
+                return point.send?.Invoke(value, timeStamp) ?? false;
             else
-            {
-                var converted = value.To<T, TValue>();
-                return send?.Invoke(ref converted, ref timeStamp) ?? false;
-            }
+                return send?.Invoke(value.To<T, TValue>(), timeStamp) ?? false;
         }
 
-        protected override Task<bool> OnSendAsyncRequested<T>(T value, DateTime? timeStamp) => Task.Run(() => Send(ref value, ref timeStamp));
-        protected override bool OnSendRequested<T>(T value, DateTime? timeStamp) => Send(ref value, ref timeStamp);
+        protected override Task<bool> OnSendAsyncRequested<T>(in T value, in DateTime? timeStamp, in CancellationToken? cancellationToken)
+        {
+            var localValue = value;
+            var localtimeStamp = timeStamp;
+            return cancellationToken != null
+                ? Task.Run(() => Send(localValue, localtimeStamp), cancellationToken.Value)
+                : Task.Run(() => Send(localValue, localtimeStamp));
+        }
+        protected override bool OnSendRequested<T>(in T value, in DateTime? timeStamp) => Send(value, timeStamp);
 
         public InterfaceHandler<TValue> DefaultHandler
         {

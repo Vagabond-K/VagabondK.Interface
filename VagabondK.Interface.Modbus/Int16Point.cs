@@ -6,7 +6,7 @@ using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus
 {
-    public class ModbusInt16Point<TValue> : ModbusNumericPoint<short, TValue>
+    public class Int16Point<TValue> : NumericPoint<short, TValue>
     {
         /// <summary>
         /// 생성자
@@ -21,14 +21,14 @@ namespace VagabondK.Interface.Modbus
         /// <param name="requestLength">요청을 위한 데이터 개수</param>
         /// <param name="useMultiWriteFunction">쓰기 요청 시 다중 쓰기 Function(0x10) 사용 여부, Holding Register일 경우만 적용되고 Input Register일 경우는 무시함</param>
         /// <param name="handlers">인터페이스 처리기 열거</param>
-        public ModbusInt16Point(byte slaveAddress = 0, bool writable = true, ushort address = 0, double scale = 1, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
+        public Int16Point(byte slaveAddress = 0, bool writable = true, ushort address = 0, double scale = 1, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
             : base(slaveAddress, writable, address, scale, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers) { }
 
         protected override short Deserialize() => BitConverter.ToInt16(GetBytesFromRegisters(true), 0);
         protected override byte[] Serialize(short serialize) => BitConverter.GetBytes(serialize);
     }
 
-    public class ModbusInt16Point : ModbusInt16Point<short>
+    public class ModbusInt16Point : Int16Point<short>
     {
         /// <summary>
         /// 생성자

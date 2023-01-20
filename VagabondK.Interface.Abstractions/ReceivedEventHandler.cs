@@ -3,5 +3,5 @@ using VagabondK.Interface.Abstractions;
 
 namespace VagabondK.Interface
 {
-    public delegate void ReceivedEventHandler<TValue>(InterfaceHandler<TValue> handler, TValue value, DateTime? timeStamp);
+    public delegate void ReceivedEventHandler<TValue>(InterfaceHandler<TValue> handler);
 }

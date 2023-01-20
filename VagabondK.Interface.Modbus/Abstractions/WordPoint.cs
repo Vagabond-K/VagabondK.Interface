@@ -8,14 +8,14 @@ using VagabondK.Protocols.Modbus.Data;
 
 namespace VagabondK.Interface.Modbus.Abstractions
 {
-    public abstract class ModbusRegisterPoint<TValue> : ModbusPoint<TValue>, IModbusRegisterPoint
+    public abstract class WordPoint<TValue> : ModbusPoint<TValue>, IModbusWordPoint
     {
         private bool writable;
 
         private ModbusEndian endian = ModbusEndian.AllBig;
         private readonly object writeRequestLock = new object();
 
-        public ModbusRegisterPoint(byte slaveAddress, bool writable, ushort address, ModbusEndian endian, ushort? requestAddress, ushort? requestLength, bool? useMultiWriteFunction, IEnumerable<InterfaceHandler> handlers)
+        public WordPoint(byte slaveAddress, bool writable, ushort address, ModbusEndian endian, ushort? requestAddress, ushort? requestLength, bool? useMultiWriteFunction, IEnumerable<InterfaceHandler> handlers)
             : base(slaveAddress, address, requestAddress, requestLength, useMultiWriteFunction, handlers)
         {
             Writable = writable;
@@ -40,17 +40,17 @@ namespace VagabondK.Interface.Modbus.Abstractions
 
         public ModbusEndian Endian { get => endian; set => SetProperty(ref endian, value); }
 
-        protected ModbusRegisters Registers { get; private set; }
+        protected ModbusWords Words { get; private set; }
         protected ModbusWriteHoldingRegisterRequest WriteRequest { get; set; }
         protected abstract bool DefaultUseMultiWriteFunction { get; }
-        protected abstract int RegistersCount { get; }
-        int IModbusRegisterPoint.RegistersCount => RegistersCount;
+        protected abstract int WordsCount { get; }
+        int IModbusWordPoint.WordsCount => WordsCount;
 
         protected abstract TValue GetValue();
 
-        protected abstract byte[] GetBytes(TValue value);
+        protected abstract byte[] GetBytes(in TValue value);
 
-        protected override bool OnSendRequested(ModbusMaster master, ref TValue value)
+        protected override bool OnSendRequested(ModbusMaster master, in TValue value)
         {
             lock (writeRequestLock)
             {
@@ -87,7 +87,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
             }
         }
 
-        protected override bool OnSendRequested(ModbusSlave slave, ref TValue value)
+        protected override bool OnSendRequested(ModbusSlave slave, in TValue value)
         {
             try
             {
@@ -100,16 +100,16 @@ namespace VagabondK.Interface.Modbus.Abstractions
             }
         }
 
-        void IModbusRegisterPoint.SetRegisters(ModbusRegisters registers)
+        void IModbusWordPoint.SetWords(ModbusWords words)
         {
-            Registers = registers;
+            Words = words;
         }
 
-        void IModbusRegisterPoint.SetReceivedValue(ModbusRegisters registers, ref DateTime? timeStamp)
+        void IModbusWordPoint.SetReceivedValue(ModbusWords words, in DateTime? timeStamp)
         {
-            Registers = registers;
+            Words = words;
             var value = GetValue();
-            SetReceivedValue(ref value, ref timeStamp);
+            SetReceivedValue(value, timeStamp);
         }
 
     }

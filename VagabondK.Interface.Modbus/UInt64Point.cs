@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.Modbus.Abstractions;
 using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus
 {
-    public class ModbusBytePoint<TValue> : ModbusNumericPoint<byte, TValue>
+    public class UInt64Point<TValue> : NumericPoint<ulong, TValue>
     {
         /// <summary>
         /// 생성자
@@ -21,14 +21,14 @@ namespace VagabondK.Interface.Modbus
         /// <param name="requestLength">요청을 위한 데이터 개수</param>
         /// <param name="useMultiWriteFunction">쓰기 요청 시 다중 쓰기 Function(0x10) 사용 여부, Holding Register일 경우만 적용되고 Input Register일 경우는 무시함</param>
         /// <param name="handlers">인터페이스 처리기 열거</param>
-        public ModbusBytePoint(byte slaveAddress = 0, bool writable = true, ushort address = 0, double scale = 1, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
+        public UInt64Point(byte slaveAddress = 0, bool writable = true, ushort address = 0, double scale = 1, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
             : base(slaveAddress, writable, address, scale, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers) { }
 
-        protected override byte Deserialize() => GetBytesFromRegisters(false).FirstOrDefault();
-        protected override byte[] Serialize(byte serialize) => new[] { serialize };
+        protected override ulong Deserialize() => BitConverter.ToUInt64(GetBytesFromRegisters(true), 0);
+        protected override byte[] Serialize(ulong serialize) => BitConverter.GetBytes(serialize);
     }
 
-    public class ModbusBytePoint : ModbusBytePoint<byte>
+    public class ModbusUInt64Point : UInt64Point<ulong>
     {
         /// <summary>
         /// 생성자
@@ -42,7 +42,7 @@ namespace VagabondK.Interface.Modbus
         /// <param name="requestLength">요청을 위한 데이터 개수</param>
         /// <param name="useMultiWriteFunction">쓰기 요청 시 다중 쓰기 Function(0x10) 사용 여부, Holding Register일 경우만 적용되고 Input Register일 경우는 무시함</param>
         /// <param name="handlers">인터페이스 처리기 열거</param>
-        public ModbusBytePoint(byte slaveAddress = 0, bool writable = true, ushort address = 0, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
+        public ModbusUInt64Point(byte slaveAddress = 0, bool writable = true, ushort address = 0, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
             : base(slaveAddress, writable, address, 1, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers) { }
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace VagabondK.Interface.Abstractions
 {
-    public abstract class Interface<TPoint> : ICollection<TPoint>, IEnumerable<TPoint>, INotifyPropertyChanged, IInterface where TPoint : InterfacePoint
+    public abstract class Interface<TPoint> : ICollection<TPoint>, IEnumerable<TPoint>, INotifyPropertyChanged where TPoint : InterfacePoint
     {
         private readonly HashSet<TPoint> points = new HashSet<TPoint>();
 
@@ -33,7 +33,8 @@ namespace VagabondK.Interface.Abstractions
             lock (points)
             {
                 if (point.Interface == this) return;
-                (point.Interface as IInterface)?.Remove(point);
+
+                (point.Interface as Interface<TPoint>)?.Remove(point);
 
                 if (points.Add(point))
                 {
@@ -62,8 +63,6 @@ namespace VagabondK.Interface.Abstractions
         }
 
         public void Clear() => points.Clear();
-
-        bool IInterface.Remove(InterfacePoint point) => Remove((TPoint)point);
 
         public int Count => points.Count;
 

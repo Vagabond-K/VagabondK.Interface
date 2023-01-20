@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace VagabondK.Interface.Abstractions
@@ -12,7 +13,7 @@ namespace VagabondK.Interface.Abstractions
         private InterfacePoint point;
         private InterfaceMode mode;
 
-        internal protected bool SetProperty<TProperty>(ref TProperty target, ref TProperty value, [CallerMemberName] string propertyName = null)
+        internal protected bool SetProperty<TProperty>(ref TProperty target, in TProperty value, [CallerMemberName] string propertyName = null)
         {
             if (!EqualityComparer<TProperty>.Default.Equals(target, value))
             {
@@ -26,12 +27,12 @@ namespace VagabondK.Interface.Abstractions
         public abstract Task<bool> SendLocalValueAsync();
         public abstract bool SendLocalValue();
 
-        internal abstract void SetReceivedOtherTypeValue<T>(ref T value, ref DateTime? timeStamp);
+        internal abstract void SetReceivedOtherTypeValue<T>(in T value, in DateTime? timeStamp);
 
         internal void RaiseErrorOccurred(Exception exception, ErrorDirection direction)
             => ErrorOccurred?.Invoke(this, new ErrorOccurredEventArgs(exception, direction));
 
-        internal void SetTimeStamp(ref DateTime? timeStamp) => SetProperty(ref this.timeStamp, ref timeStamp, nameof(TimeStamp));
+        internal protected void SetTimeStamp(in DateTime? timeStamp) => SetProperty(ref this.timeStamp, timeStamp, nameof(TimeStamp));
 
         protected InterfaceHandler() { }
         protected InterfaceHandler(InterfaceMode mode)
@@ -41,14 +42,18 @@ namespace VagabondK.Interface.Abstractions
 
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
-        public InterfacePoint Point { get => point; internal set => SetProperty(ref point, ref value); }
-        public InterfaceMode Mode { get => mode; set => SetProperty(ref mode, ref value); }
-        public DateTime? TimeStamp { get => timeStamp; internal set => SetProperty(ref timeStamp, ref value); }
+        public InterfacePoint Point { get => point; internal set => SetProperty(ref point, value); }
+        public InterfaceMode Mode { get => mode; set => SetProperty(ref mode, value); }
+        public DateTime? TimeStamp { get => timeStamp; internal set => SetProperty(ref timeStamp, value); }
         public event ErrorOccurredEventHandler ErrorOccurred;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public abstract Task<bool> SendAsync<T>(T value, DateTime? timeStamp = null);
-        public abstract bool Send<T>(T value, DateTime? timeStamp);
+        public Task<bool> SendAsync<T>(in T value) => SendAsync(value, null, null);
+        public Task<bool> SendAsync<T>(in T value, DateTime? timeStamp) => SendAsync(value, timeStamp, null);
+        public Task<bool> SendAsync<T>(in T value, CancellationToken? cancellationToken) => SendAsync(value, null, cancellationToken);
+        public abstract Task<bool> SendAsync<T>(in T value, DateTime? timeStamp, CancellationToken? cancellationToken);
 
+        public bool Send<T>(in T value) => Send(value, null);
+        public abstract bool Send<T>(in T value, DateTime? timeStamp);
     }
 }

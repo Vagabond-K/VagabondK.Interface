@@ -30,7 +30,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         public ushort? RequestAddress { get; }
         public ushort? RequestLength { get; }
 
-        internal byte GetSlaveAddress(InterfaceAttribute rootAttribute)
+        internal protected byte GetSlaveAddress(InterfaceAttribute rootAttribute)
             => SlaveAddress ?? (rootAttribute as ModbusAttribute)?.SlaveAddress ?? 0;
     }
 }
