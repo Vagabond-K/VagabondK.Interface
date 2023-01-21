@@ -19,8 +19,10 @@ namespace VagabondK.Interface.Modbus.Abstractions
         public ModbusEndian Endian { get; set; } = ModbusEndian.AllBig;
         public byte BitIndex { get; set; }
         public string Encoding { get; set; } = System.Text.Encoding.UTF8.WebName;
-        public bool UnixTimeIsMilliseconds { get; set; }
-        public int UnixTimeScalePowerOf10 { get; set; }
+        public DateTimeFormat DateTimeFormat { get; set; } = DateTimeFormat.UnixTime;
+        public DateTimeKind DateTimeKind { get; set; } = DateTimeKind.Utc;
+        public int TicksScalePowerOf10 { get; set; }
+        public string DateTimeFormatString { get; set; }
 
         internal protected InterfacePoint OnCreatePoint(MemberInfo memberInfo, InterfaceAttribute rootAttribute, bool writable, bool? useMultiWriteFunction = null)
         {
@@ -51,16 +53,31 @@ namespace VagabondK.Interface.Modbus.Abstractions
                     var pointType = numericPointType.MakeGenericType(memberType);
                     return (InterfacePoint)Activator.CreateInstance(pointType, GetSlaveAddress(rootAttribute), writable, Address, Scale, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(DateTime):
-                    return new DotNetDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                    switch (DateTimeFormat)
+                    {
+                        case DateTimeFormat.UnixTime:
+                            return new UnixTimePoint(GetSlaveAddress(rootAttribute), writable, Address, TicksScalePowerOf10,
+                                BytesLength, DateTimeKind, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                        case DateTimeFormat.DotNet:
+                            return new DotNetDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                        case DateTimeFormat.Ticks:
+                            return new TicksDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, TicksScalePowerOf10,
+                                BytesLength, DateTimeKind, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                        case DateTimeFormat.String:
+                            return new StringDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, DateTimeFormatString, DateTimeKind,
+                                System.Text.Encoding.GetEncoding(Encoding), SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                        case DateTimeFormat.Bytes:
+                            return new BytesDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, DateTimeFormatString, DateTimeKind,
+                                SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                        default:
+                            return null;
+                    }
                 case "Byte[]":
                     return new ByteArrayPoint(GetSlaveAddress(rootAttribute), writable, Address,
                         BytesLength, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 case nameof(String):
                     return new StringPoint(GetSlaveAddress(rootAttribute), writable, Address,
                         BytesLength, System.Text.Encoding.GetEncoding(Encoding), SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
-                case nameof(DateTimeOffset):
-                    return new UnixTimePoint(GetSlaveAddress(rootAttribute), writable, Address, UnixTimeIsMilliseconds, UnixTimeScalePowerOf10,
-                        BytesLength, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                 default:
                     return null;
             };
