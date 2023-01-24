@@ -34,6 +34,7 @@ namespace SimpleModbusSlaveSample
                 target.Text1 = $"test{DateTime.Now.Second}";
                 //var array = slaveService[1].HoldingRegisters.GetRawData(410, 2).ToArray();
                 //Console.WriteLine($"{array[0]}, {array[1]}");
+                target.DateTime1 = DateTime.Now;
 
                 System.Threading.Thread.Sleep(1000);
             }
@@ -45,6 +46,9 @@ namespace SimpleModbusSlaveSample
     [Modbus(1)]
     class LocalObject : NotifyPropertyChangeObject
     {
+        [InputRegister(200, DateTimeFormat = DateTimeFormat.Bytes, DateTimeFormatString = "yyMdHmff")]
+        public DateTime DateTime1 { get => Get<DateTime>(); set => Set(value); }
+
         [DiscreteInput(10)]
         public bool DI1 { get => Get(true); set => Set(value); }
         [DiscreteInput(11)]

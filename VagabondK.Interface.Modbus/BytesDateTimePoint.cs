@@ -10,6 +10,7 @@ namespace VagabondK.Interface.Modbus
 {
     public class BytesDateTimePoint : MultiBytesPoint<DateTime>
     {
+        private readonly object formatLock = new object();
         private string format;
         private DateTimeKind dateTimeKind;
         private int yearByteCount = 0;
@@ -19,6 +20,13 @@ namespace VagabondK.Interface.Modbus
         private int minuteByteCount = 0;
         private int secondByteCount = 0;
         private int millisecondByteCount = 0;
+        private byte[] yearBytes;
+        private byte[] monthBytes;
+        private byte[] dayBytes;
+        private byte[] hourBytes;
+        private byte[] minuteBytes;
+        private byte[] secondBytes;
+        private byte[] millisecondBytes;
 
         /// <summary>
         /// 생성자
@@ -56,26 +64,37 @@ namespace VagabondK.Interface.Modbus
 
         private void UpdateByteCounts()
         {
-            yearByteCount = 0;
-            monthByteCount = 0;
-            dayByteCount = 0;
-            hourByteCount = 0;
-            minuteByteCount = 0;
-            secondByteCount = 0;
-            millisecondByteCount = 0;
-
-            foreach (char c in format)
+            lock (formatLock)
             {
-                switch (c)
+                yearByteCount = 0;
+                monthByteCount = 0;
+                dayByteCount = 0;
+                hourByteCount = 0;
+                minuteByteCount = 0;
+                secondByteCount = 0;
+                millisecondByteCount = 0;
+
+                foreach (char c in format)
                 {
-                    case 'y': yearByteCount++; break;
-                    case 'M': monthByteCount++; break;
-                    case 'd': dayByteCount++; break;
-                    case 'H': hourByteCount++; break;
-                    case 'm': minuteByteCount++; break;
-                    case 's': secondByteCount++; break;
-                    case 'f': millisecondByteCount++; break;
+                    switch (c)
+                    {
+                        case 'y': yearByteCount++; break;
+                        case 'M': monthByteCount++; break;
+                        case 'd': dayByteCount++; break;
+                        case 'H': hourByteCount++; break;
+                        case 'm': minuteByteCount++; break;
+                        case 's': secondByteCount++; break;
+                        case 'f': millisecondByteCount++; break;
+                    }
                 }
+
+                yearBytes = new byte[Math.Max(4, yearByteCount)];
+                monthBytes = new byte[Math.Max(4, monthByteCount)];
+                dayBytes = new byte[Math.Max(4, dayByteCount)];
+                hourBytes = new byte[Math.Max(4, hourByteCount)];
+                minuteBytes = new byte[Math.Max(4, minuteByteCount)];
+                secondBytes = new byte[Math.Max(4, secondByteCount)];
+                millisecondBytes = new byte[Math.Max(4, millisecondByteCount)];
             }
         }
 
@@ -96,40 +115,44 @@ namespace VagabondK.Interface.Modbus
             if (value.Kind != DateTimeKind.Unspecified && value.Kind != dateTimeKind)
                 dateTime = dateTimeKind == DateTimeKind.Local ? value.ToLocalTime() : value.ToUniversalTime();
 
-            string format = this.format;
+            byte[] buffer;
 
-            var yearBytes = GetInt32Bytes(yearByteCount, dateTime.Year);
-            var monthBytes = GetInt32Bytes(monthByteCount, dateTime.Month);
-            var dayBytes = GetInt32Bytes(dayByteCount, dateTime.Day);
-            var hourBytes = GetInt32Bytes(hourByteCount, dateTime.Hour);
-            var minute = hourByteCount == 0 ? dateTime.Minute + dateTime.Hour * 60 : dateTime.Minute;
-            var minuteBytes = GetInt32Bytes(minuteByteCount, minute);
-            var second = minuteByteCount == 0 ? dateTime.Second + minute * 60 : dateTime.Second;
-            var secondBytes = GetInt32Bytes(secondByteCount, second);
-            var millisecond = secondByteCount == 0 ? dateTime.Millisecond + second * 1000 : dateTime.Millisecond;
-            var millisecondBytes = GetInt32Bytes(millisecondByteCount, millisecond);
-
-            var buffer = new byte[format.Length];
-            int yearByteIndex = 0;
-            int monthByteIndex = 0;
-            int dayByteIndex = 0;
-            int hourByteIndex = 0;
-            int minuteByteIndex = 0;
-            int secondByteIndex = 0;
-            int millisecondByteIndex = 0;
-
-            for (int i = 0; i < format.Length; i++)
+            lock (formatLock)
             {
-                var c = format[i];
-                switch (c)
+                buffer = new byte[format.Length];
+
+                var yearBytes = GetInt32Bytes(yearByteCount, dateTime.Year);
+                var monthBytes = GetInt32Bytes(monthByteCount, dateTime.Month);
+                var dayBytes = GetInt32Bytes(dayByteCount, dateTime.Day);
+                var hourBytes = GetInt32Bytes(hourByteCount, dateTime.Hour);
+                var minute = hourByteCount == 0 ? dateTime.Minute + dateTime.Hour * 60 : dateTime.Minute;
+                var minuteBytes = GetInt32Bytes(minuteByteCount, minute);
+                var second = minuteByteCount == 0 ? dateTime.Second + minute * 60 : dateTime.Second;
+                var secondBytes = GetInt32Bytes(secondByteCount, second);
+                var millisecond = secondByteCount == 0 ? dateTime.Millisecond + second * 1000 : dateTime.Millisecond;
+                var millisecondBytes = GetInt32Bytes(millisecondByteCount, millisecond);
+
+                int yearByteIndex = 0;
+                int monthByteIndex = 0;
+                int dayByteIndex = 0;
+                int hourByteIndex = 0;
+                int minuteByteIndex = 0;
+                int secondByteIndex = 0;
+                int millisecondByteIndex = 0;
+
+                for (int i = 0; i < format.Length; i++)
                 {
-                    case 'y': buffer[i] = yearBytes[yearByteIndex++]; break;
-                    case 'M': buffer[i] = monthBytes[monthByteIndex++]; break;
-                    case 'd': buffer[i] = dayBytes[dayByteIndex++]; break;
-                    case 'H': buffer[i] = hourBytes[hourByteIndex++]; break;
-                    case 'm': buffer[i] = minuteBytes[minuteByteIndex++]; break;
-                    case 's': buffer[i] = secondBytes[secondByteIndex++]; break;
-                    case 'f': buffer[i] = millisecondBytes[millisecondByteIndex++]; break;
+                    var c = format[i];
+                    switch (c)
+                    {
+                        case 'y': buffer[i] = yearBytes[yearByteIndex++]; break;
+                        case 'M': buffer[i] = monthBytes[monthByteIndex++]; break;
+                        case 'd': buffer[i] = dayBytes[dayByteIndex++]; break;
+                        case 'H': buffer[i] = hourBytes[hourByteIndex++]; break;
+                        case 'm': buffer[i] = minuteBytes[minuteByteIndex++]; break;
+                        case 's': buffer[i] = secondBytes[secondByteIndex++]; break;
+                        case 'f': buffer[i] = millisecondBytes[millisecondByteIndex++]; break;
+                    }
                 }
             }
 
@@ -140,55 +163,54 @@ namespace VagabondK.Interface.Modbus
 
         protected override DateTime GetValue()
         {
-            var yearBytes = new byte[Math.Max(4, yearByteCount)];
-            var monthBytes = new byte[Math.Max(4, monthByteCount)];
-            var dayBytes = new byte[Math.Max(4, dayByteCount)];
-            var hourBytes = new byte[Math.Max(4, hourByteCount)];
-            var minuteBytes = new byte[Math.Max(4, minuteByteCount)];
-            var secondBytes = new byte[Math.Max(4, secondByteCount)];
-            var millisecondBytes = new byte[Math.Max(4, millisecondByteCount)];
-
-            var buffer = GetBytesFromRegisters(false);
-            int yearByteIndex = BitConverter.IsLittleEndian ? yearByteCount : Math.Max(0, 4 - yearByteCount);
-            int monthByteIndex = BitConverter.IsLittleEndian ? monthByteCount : Math.Max(0, 4 - monthByteCount);
-            int dayByteIndex = BitConverter.IsLittleEndian ? dayByteCount : Math.Max(0, 4 - dayByteCount);
-            int hourByteIndex = BitConverter.IsLittleEndian ? hourByteCount : Math.Max(0, 4 - hourByteCount);
-            int minuteByteIndex = BitConverter.IsLittleEndian ? minuteByteCount : Math.Max(0, 4 - minuteByteCount);
-            int secondByteIndex = BitConverter.IsLittleEndian ? secondByteCount : Math.Max(0, 4 - secondByteCount);
-            int millisecondByteIndex = BitConverter.IsLittleEndian ? millisecondByteCount : Math.Max(0, 4 - millisecondByteCount);
-
-            for (int i = 0; i < format.Length; i++)
+            lock (formatLock)
             {
-                var c = format[i];
-                switch (c)
+                var buffer = GetBytesFromRegisters(false);
+                int yearByteIndex = BitConverter.IsLittleEndian ? yearByteCount : Math.Max(0, 4 - yearByteCount);
+                int monthByteIndex = BitConverter.IsLittleEndian ? monthByteCount : Math.Max(0, 4 - monthByteCount);
+                int dayByteIndex = BitConverter.IsLittleEndian ? dayByteCount : Math.Max(0, 4 - dayByteCount);
+                int hourByteIndex = BitConverter.IsLittleEndian ? hourByteCount : Math.Max(0, 4 - hourByteCount);
+                int minuteByteIndex = BitConverter.IsLittleEndian ? minuteByteCount : Math.Max(0, 4 - minuteByteCount);
+                int secondByteIndex = BitConverter.IsLittleEndian ? secondByteCount : Math.Max(0, 4 - secondByteCount);
+                int millisecondByteIndex = BitConverter.IsLittleEndian ? millisecondByteCount : Math.Max(0, 4 - millisecondByteCount);
+
+                for (int i = 0; i < format.Length; i++)
                 {
-                    case 'y': yearBytes[BitConverter.IsLittleEndian ? --yearByteIndex : yearByteIndex++] = buffer[i]; break;
-                    case 'M': monthBytes[BitConverter.IsLittleEndian ? --monthByteIndex : monthByteIndex++] = buffer[i]; break;
-                    case 'd': dayBytes[BitConverter.IsLittleEndian ? --dayByteIndex : dayByteIndex++] = buffer[i]; break;
-                    case 'H': hourBytes[BitConverter.IsLittleEndian ? --hourByteIndex : hourByteIndex++] = buffer[i]; break;
-                    case 'm': minuteBytes[BitConverter.IsLittleEndian ? --minuteByteIndex : minuteByteIndex++] = buffer[i]; break;
-                    case 's': secondBytes[BitConverter.IsLittleEndian ? --secondByteIndex : secondByteIndex++] = buffer[i]; break;
-                    case 'f': millisecondBytes[BitConverter.IsLittleEndian ? --millisecondByteIndex : millisecondByteIndex++] = buffer[i]; break;
+                    var c = format[i];
+                    switch (c)
+                    {
+                        case 'y': yearBytes[BitConverter.IsLittleEndian ? --yearByteIndex : yearByteIndex++] = buffer[i]; break;
+                        case 'M': monthBytes[BitConverter.IsLittleEndian ? --monthByteIndex : monthByteIndex++] = buffer[i]; break;
+                        case 'd': dayBytes[BitConverter.IsLittleEndian ? --dayByteIndex : dayByteIndex++] = buffer[i]; break;
+                        case 'H': hourBytes[BitConverter.IsLittleEndian ? --hourByteIndex : hourByteIndex++] = buffer[i]; break;
+                        case 'm': minuteBytes[BitConverter.IsLittleEndian ? --minuteByteIndex : minuteByteIndex++] = buffer[i]; break;
+                        case 's': secondBytes[BitConverter.IsLittleEndian ? --secondByteIndex : secondByteIndex++] = buffer[i]; break;
+                        case 'f': millisecondBytes[BitConverter.IsLittleEndian ? --millisecondByteIndex : millisecondByteIndex++] = buffer[i]; break;
+                    }
                 }
-            }
 
-            var millisecond = millisecondByteCount > 0 ? BitConverter.ToInt32(millisecondBytes, 0) : 0;
-            var second = secondByteCount > 0 ? BitConverter.ToInt32(secondBytes, 0) : millisecond / 1000;
-            var minute = minuteByteCount > 0 ? BitConverter.ToInt32(minuteBytes, 0) : second / 60;
-            var hour = hourByteCount > 0 ? BitConverter.ToInt32(hourBytes, 0) : minute / 60;
-            var day = hourByteCount > 0 ? BitConverter.ToInt32(dayBytes, 0) : 1;
-            var month = monthByteCount > 0 ? BitConverter.ToInt32(monthBytes, 0) : 1;
-            var year = hourByteCount > 0 ? BitConverter.ToInt32(yearBytes, 0) : 1;
+                var millisecond = millisecondByteCount > 0 ? BitConverter.ToInt32(millisecondBytes, 0) : 0;
+                var second = secondByteCount > 0 ? BitConverter.ToInt32(secondBytes, 0) : millisecond / 1000;
+                var minute = minuteByteCount > 0 ? BitConverter.ToInt32(minuteBytes, 0) : second / 60;
+                var hour = hourByteCount > 0 ? BitConverter.ToInt32(hourBytes, 0) : minute / 60;
+                var day = hourByteCount > 0 ? BitConverter.ToInt32(dayBytes, 0) : 1;
+                var month = monthByteCount > 0 ? BitConverter.ToInt32(monthBytes, 0) : 1;
+                var year = hourByteCount > 0 ? BitConverter.ToInt32(yearBytes, 0) : 1;
 
-            var ticks = new DateTime(year, month, day, hour, minute, second, millisecond).Ticks;
+                millisecond %= 1000;
+                second %= 60;
+                minute %= 60;
 
-            switch (dateTimeKind)
-            {
-                case DateTimeKind.Local:
-                    return new DateTime(ticks, dateTimeKind);
-                case DateTimeKind.Utc:
-                default:
-                    return new DateTime(ticks, dateTimeKind).ToLocalTime();
+                var ticks = new DateTime(year, month, day, hour, minute, second, millisecond).Ticks;
+
+                switch (dateTimeKind)
+                {
+                    case DateTimeKind.Local:
+                        return new DateTime(ticks, dateTimeKind);
+                    case DateTimeKind.Utc:
+                    default:
+                        return new DateTime(ticks, dateTimeKind).ToLocalTime();
+                }
             }
         }
     }

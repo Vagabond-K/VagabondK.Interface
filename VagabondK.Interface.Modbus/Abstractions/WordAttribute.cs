@@ -13,7 +13,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         protected WordAttribute(byte slaveAddress, ushort address, ushort requestAddress, ushort requestLength) : base(slaveAddress, address, requestAddress, requestLength) { }
 
         public Type Type { get; set; }
-        public int BytesLength { get; set; } = 2;
+        public int BytesLength { get; set; }
         public bool SkipFirstByte { get; set; }
         public double Scale { get; set; } = 1;
         public ModbusEndian Endian { get; set; } = ModbusEndian.AllBig;
@@ -57,12 +57,12 @@ namespace VagabondK.Interface.Modbus.Abstractions
                     {
                         case DateTimeFormat.UnixTime:
                             return new UnixTimePoint(GetSlaveAddress(rootAttribute), writable, Address, TicksScalePowerOf10,
-                                BytesLength, DateTimeKind, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                                BytesLength <= 0 ? 8 : BytesLength, DateTimeKind, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                         case DateTimeFormat.DotNet:
                             return new DotNetDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                         case DateTimeFormat.Ticks:
                             return new TicksDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, TicksScalePowerOf10,
-                                BytesLength, DateTimeKind, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
+                                BytesLength <= 0 ? 8 : BytesLength, DateTimeKind, SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
                         case DateTimeFormat.String:
                             return new StringDateTimePoint(GetSlaveAddress(rootAttribute), writable, Address, DateTimeFormatString, DateTimeKind,
                                 System.Text.Encoding.GetEncoding(Encoding), SkipFirstByte, Endian, RequestAddress, RequestLength, useMultiWriteFunction, null);
