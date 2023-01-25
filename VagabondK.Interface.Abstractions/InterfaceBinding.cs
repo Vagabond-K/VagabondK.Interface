@@ -8,20 +8,24 @@ using VagabondK.Interface.Abstractions;
 
 namespace VagabondK.Interface
 {
+    /// <summary>
+    /// 인터페이스 바인딩
+    /// </summary>
+    /// <typeparam name="TValue">바인딩할 값의 형식</typeparam>
     public class InterfaceBinding<TValue> : InterfaceHandler<TValue>, IInterfaceBinding
     {
-        private readonly object updatePropertyLock = new object();
+        private readonly object updateMemberLock = new object();
         private readonly object updateLock = new object();
 
         private object target;
-        private string propertyName;
+        private string memberName;
         private bool rollbackOnSendError = true;
         private Type memberType;
         private Func<TValue> getter;
         private Action<TValue> setter;
         private bool isUpdating;
 
-        private void UpdatePropertyValue(in TValue value, bool isReceiving = false)
+        private void UpdateMemberValue(in TValue value, bool isReceiving = false)
         {
             lock (updateLock)
             {
@@ -41,12 +45,12 @@ namespace VagabondK.Interface
             }
         }
 
-        private void UpdateProperty()
+        private void UpdateMember()
         {
-            if (target != null && !string.IsNullOrWhiteSpace(propertyName))
+            if (target != null && !string.IsNullOrWhiteSpace(memberName))
             {
-                getter = CreateGetter(target, propertyName);
-                setter = CreateSetter(target, propertyName);
+                getter = CreateGetter(target, memberName);
+                setter = CreateSetter(target, memberName);
                 if (getter != null)
                 {
                     var value = getter();
@@ -166,7 +170,7 @@ namespace VagabondK.Interface
             var point = Point;
 
             if (point != null && (Mode == InterfaceMode.TwoWay || Mode == InterfaceMode.SendOnly)
-                && !isUpdating && e.PropertyName == PropertyName)
+                && !isUpdating && e.PropertyName == MemberName)
             {
                 var eventArgstype = e?.GetType();
                 if (eventArgstype != null && propertyChangingEventArgsType != eventArgstype)
@@ -204,7 +208,7 @@ namespace VagabondK.Interface
                     {
                         cancel(e);
                         if (await point.OnSendAsyncRequested(newValue, null, null))
-                            UpdatePropertyValue(newValue);
+                            UpdateMemberValue(newValue);
                     }
                     else if (!point.OnSendRequested(newValue, null))
                         cancel(e);
@@ -214,10 +218,10 @@ namespace VagabondK.Interface
                     void OnPropertyChangedTemp(object senderTemp, PropertyChangedEventArgs eTemp)
                     {
                         OnPropertyChanged(senderTemp, eTemp);
-                        lock (updatePropertyLock)
+                        lock (updateMemberLock)
                             notifyPropertyChanged.PropertyChanged -= OnPropertyChangedTemp;
                     }
-                    lock (updatePropertyLock)
+                    lock (updateMemberLock)
                         notifyPropertyChanged.PropertyChanged += OnPropertyChangedTemp;
                 }
             }
@@ -230,37 +234,86 @@ namespace VagabondK.Interface
 
             if (getter != null && point != null
                 && (Mode == InterfaceMode.TwoWay || Mode == InterfaceMode.SendOnly)
-                && memberType != null && !isUpdating && e.PropertyName == PropertyName)
+                && memberType != null && !isUpdating && e.PropertyName == MemberName)
             {
                 var value = getter();
                 if (!(!point.IsWaitSending ? point.OnSendRequested(value, null) : await point.OnSendAsyncRequested(value, null, null)) && RollbackOnSendError)
-                    UpdatePropertyValue(this.value);
+                    UpdateMemberValue(this.value);
             }
         }
 
+        /// <summary>
+        /// 생성자
+        /// </summary>
         public InterfaceBinding() : this(null, null, InterfaceMode.TwoWay, true) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="mode">인터페이스 모드</param>
         public InterfaceBinding(InterfaceMode mode) : this(null, null, mode, true) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="rollbackOnSendError">보내기 오류가 발생할 때 값 롤백 여부</param>
         public InterfaceBinding(bool rollbackOnSendError) : this(null, null, InterfaceMode.TwoWay, rollbackOnSendError) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="mode">인터페이스 모드</param>
+        /// <param name="rollbackOnSendError">보내기 오류가 발생할 때 값 롤백 여부</param>
         public InterfaceBinding(InterfaceMode mode, bool rollbackOnSendError) : this(null, null, mode, rollbackOnSendError) { }
-        public InterfaceBinding(object target, string propertyName) : this(target, propertyName, InterfaceMode.TwoWay, true) { }
-        public InterfaceBinding(object target, string propertyName, InterfaceMode mode) : this(target, propertyName, mode, true) { }
-        public InterfaceBinding(object target, string propertyName, bool rollbackOnSendError) : this(target, propertyName, InterfaceMode.TwoWay, rollbackOnSendError) { }
-        public InterfaceBinding(object target, string propertyName, InterfaceMode mode, bool rollbackOnSendError) : base(mode)
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="target">바인딩 타켓 객체</param>
+        /// <param name="memberName">바인딩 멤버 이름</param>
+        public InterfaceBinding(object target, string memberName) : this(target, memberName, InterfaceMode.TwoWay, true) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="target">바인딩 타켓 객체</param>
+        /// <param name="memberName">바인딩 멤버 이름</param>
+        /// <param name="mode">인터페이스 모드</param>
+        public InterfaceBinding(object target, string memberName, InterfaceMode mode) : this(target, memberName, mode, true) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="target">바인딩 타켓 객체</param>
+        /// <param name="memberName">바인딩 멤버 이름</param>
+        /// <param name="rollbackOnSendError">보내기 오류가 발생할 때 값 롤백 여부</param>
+        public InterfaceBinding(object target, string memberName, bool rollbackOnSendError) : this(target, memberName, InterfaceMode.TwoWay, rollbackOnSendError) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="target">바인딩 타켓 객체</param>
+        /// <param name="memberName">바인딩 멤버 이름</param>
+        /// <param name="mode">인터페이스 모드</param>
+        /// <param name="rollbackOnSendError">보내기 오류가 발생할 때 값 롤백 여부</param>
+        public InterfaceBinding(object target, string memberName, InterfaceMode mode, bool rollbackOnSendError) : base(mode)
         {
             Target = target;
-            PropertyName = propertyName;
+            MemberName = memberName;
             RollbackOnSendError = rollbackOnSendError;
         }
 
-        protected override void OnReceived(in TValue value, in DateTime? timeStamp)
-            => UpdatePropertyValue(value, true);
 
+        /// <summary>
+        /// 값이 수신되었을 때 호출되는 메서드
+        /// </summary>
+        /// <param name="value">받은 값</param>
+        /// <param name="timeStamp">받은 값의 적용 일시</param>
+        protected override void OnReceived(in TValue value, in DateTime? timeStamp)
+            => UpdateMemberValue(value, true);
+
+        /// <summary>
+        /// 바인딩 타켓 객체
+        /// </summary>
         public object Target
         {
             get => target;
             set
             {
-                lock (updatePropertyLock)
+                lock (updateMemberLock)
                 {
                     if (!Equals(target, value))
                     {
@@ -270,7 +323,7 @@ namespace VagabondK.Interface
                             oldNotifyPropertyChanged.PropertyChanged -= OnPropertyChanged;
 
                         target = value;
-                        UpdateProperty();
+                        UpdateMember();
 
                         if (rollbackOnSendError)
                         {
@@ -287,29 +340,35 @@ namespace VagabondK.Interface
             }
         }
 
-        public string PropertyName
+        /// <summary>
+        /// 바인딩 멤버 이름
+        /// </summary>
+        public string MemberName
         {
-            get => propertyName;
+            get => memberName;
             set
             {
-                lock (updatePropertyLock)
+                lock (updateMemberLock)
                 {
-                    if (!Equals(propertyName, value))
+                    if (!Equals(memberName, value))
                     {
-                        propertyName = value;
-                        UpdateProperty();
+                        memberName = value;
+                        UpdateMember();
                         RaisePropertyChanged();
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// 보내기 오류가 발생할 때 값 롤백 여부
+        /// </summary>
         public bool RollbackOnSendError
         {
             get => rollbackOnSendError;
             set
             {
-                lock (updatePropertyLock)
+                lock (updateMemberLock)
                 {
                     if (rollbackOnSendError != value)
                     {
@@ -338,23 +397,45 @@ namespace VagabondK.Interface
             }
         }
 
-        public Task<bool> SendAsyncAndUpdateProperty(in TValue value) => SendAsyncAndUpdateProperty(value, null);
-        public async Task<bool> SendAsyncAndUpdateProperty(TValue value, DateTime? timeStamp)
+        /// <summary>
+        /// 비동기로 값 전송 및 멤버 값 업데이트
+        /// </summary>
+        /// <param name="value">보낼 값</param>
+        /// <returns>전송 성공 여부 반환 태스크</returns>
+        public Task<bool> SendAsyncAndUpdateMember(in TValue value) => SendAsyncAndUpdateMember(value, null);
+        /// <summary>
+        /// 비동기로 값 전송 및 멤버 값 업데이트
+        /// </summary>
+        /// <param name="value">보낼 값</param>
+        /// <param name="timeStamp">보낼 값의 적용 일시</param>
+        /// <returns>전송 성공 여부 반환 태스크</returns>
+        public async Task<bool> SendAsyncAndUpdateMember(TValue value, DateTime? timeStamp)
         {
             if (await SendAsync(value, timeStamp, null))
             {
-                UpdatePropertyValue(value);
+                UpdateMemberValue(value);
                 return true;
             }
             return false;
         }
 
-        public bool SendAndUpdateProperty(in TValue value) => SendAndUpdateProperty(value, null);
-        public bool SendAndUpdateProperty(in TValue value, in DateTime? timeStamp)
+        /// <summary>
+        /// 값 전송 및 멤버 값 업데이트
+        /// </summary>
+        /// <param name="value">보낼 값</param>
+        /// <returns>전송 성공 여부</returns>
+        public bool SendAndUpdateMember(in TValue value) => SendAndUpdateMember(value, null);
+        /// <summary>
+        /// 값 전송 및 멤버 값 업데이트
+        /// </summary>
+        /// <param name="value">보낼 값</param>
+        /// <param name="timeStamp">보낼 값의 적용 일시</param>
+        /// <returns>전송 성공 여부</returns>
+        public bool SendAndUpdateMember(in TValue value, in DateTime? timeStamp)
         {
             if (Send(value, timeStamp))
             {
-                UpdatePropertyValue(value);
+                UpdateMemberValue(value);
                 return true;
             }
             return false;

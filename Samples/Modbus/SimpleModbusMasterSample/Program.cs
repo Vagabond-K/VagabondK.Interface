@@ -47,8 +47,8 @@ namespace SimpleModbusMasterSample
                 {
                     binding.ErrorOccurred += Binding_ExceptionOccurred;
                     if (binding is InterfaceBinding<float> singleBinding
-                        && singleBinding.PropertyName == nameof(localObject.Single3))
-                        singleBinding.SendAsyncAndUpdateProperty(23.45f).Wait();
+                        && singleBinding.MemberName == nameof(localObject.Single3))
+                        singleBinding.SendAsyncAndUpdateMember(23.45f).Wait();
                 }
 
             //localObject.Single3 = 123.567f;
@@ -91,37 +91,37 @@ namespace SimpleModbusMasterSample
         [HoldingRegister(411)]
         public ushort BitFlags { get => Get<ushort>(0); set => Set(value); }
 
-        [HoldingRegister(411, BitIndex = 0)]
+        [HoldingRegister(411, BitFlagIndex = 0)]
         public bool Bit1 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 1)]
+        [HoldingRegister(411, BitFlagIndex = 1)]
         public bool Bit2 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 2)]
+        [HoldingRegister(411, BitFlagIndex = 2)]
         public bool Bit3 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 3)]
+        [HoldingRegister(411, BitFlagIndex = 3)]
         public bool Bit4 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 4)]
+        [HoldingRegister(411, BitFlagIndex = 4)]
         public bool Bit5 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 5)]
+        [HoldingRegister(411, BitFlagIndex = 5)]
         public bool Bit6 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 6)]
+        [HoldingRegister(411, BitFlagIndex = 6)]
         public bool Bit7 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 7)]
+        [HoldingRegister(411, BitFlagIndex = 7)]
         public bool Bit8 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 8)]
+        [HoldingRegister(411, BitFlagIndex = 8)]
         public bool Bit9 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 9)]
+        [HoldingRegister(411, BitFlagIndex = 9)]
         public bool Bit10 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 10)]
+        [HoldingRegister(411, BitFlagIndex = 10)]
         public bool Bit11 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 11)]
+        [HoldingRegister(411, BitFlagIndex = 11)]
         public bool Bit12 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 12)]
+        [HoldingRegister(411, BitFlagIndex = 12)]
         public bool Bit13 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 13)]
+        [HoldingRegister(411, BitFlagIndex = 13)]
         public bool Bit14 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 14)]
+        [HoldingRegister(411, BitFlagIndex = 14)]
         public bool Bit15 { get => Get(false); set => Set(value); }
-        [HoldingRegister(411, BitIndex = 15)]
+        [HoldingRegister(411, BitFlagIndex = 15)]
         public bool Bit16 { get => Get(false); set => Set(value); }
     }
 

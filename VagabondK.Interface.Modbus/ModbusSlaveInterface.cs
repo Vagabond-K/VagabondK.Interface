@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.Modbus.Abstractions;
 using VagabondK.Protocols.Modbus;
@@ -11,6 +8,9 @@ using VagabondK.Protocols.Modbus.Data;
 
 namespace VagabondK.Interface.Modbus
 {
+    /// <summary>
+    /// Modbus 슬레이브 기반 인터페이스
+    /// </summary>
     public class ModbusSlaveInterface : Interface<ModbusPoint>
     {
         class AddressMap
@@ -24,7 +24,16 @@ namespace VagabondK.Interface.Modbus
         private readonly Dictionary<ushort, AddressMap> addressMaps = new Dictionary<ushort, AddressMap>();
         private readonly Dictionary<ushort, List<ModbusPoint>> slaveMaps = new Dictionary<ushort, List<ModbusPoint>>();
 
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="service">Modbus 슬레이브 서비스</param>
         public ModbusSlaveInterface(ModbusSlaveService service) : this(service, null) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="service">Modbus 슬레이브 서비스</param>
+        /// <param name="points">인터페이스 포인트 열거</param>
         public ModbusSlaveInterface(ModbusSlaveService service, IEnumerable<ModbusPoint> points) : base(points)
         {
             Service = service;
@@ -137,6 +146,10 @@ namespace VagabondK.Interface.Modbus
             }
         }
 
+        /// <summary>
+        /// 인터페이스 포인트가 추가되었을 경우 호출됨
+        /// </summary>
+        /// <param name="point">추가된 인터페이스 포인트</param>
         protected override void OnAdded(ModbusPoint point)
         {
             if (point == null) return;
@@ -146,6 +159,10 @@ namespace VagabondK.Interface.Modbus
             point.PropertyChanged += OnPointPropertyChanged;
         }
 
+        /// <summary>
+        /// 인터페이스 포인트가 제거되었을 경우 호출됨
+        /// </summary>
+        /// <param name="point">제거된 인터페이스 포인트</param>
         protected override void OnRemoved(ModbusPoint point)
         {
             if (point == null) return;
@@ -209,6 +226,9 @@ namespace VagabondK.Interface.Modbus
                     point.SetReceivedValue(modbusSlave.HoldingRegisters, timeStamp);
         }
 
+        /// <summary>
+        /// Modbus 슬레이브 서비스
+        /// </summary>
         public ModbusSlaveService Service { get; }
 
         internal delegate bool SendToSlaveDelegate<TValue>(ModbusSlave slave, in TValue value);
@@ -259,7 +279,13 @@ namespace VagabondK.Interface.Modbus
             return result;
         }
 
-        public IEnumerable<InterfaceHandler> SetBindings(object target, byte slaveAddress)
-            => SetBindings(target, point => { point.SlaveAddress = slaveAddress; });
+        /// <summary>
+        /// 인터페이스 바인딩 일괄 설정, InterfaceAttribute을 상속받은 특성을 이용하여 일괄 바인딩 설정 가능.
+        /// </summary>
+        /// <param name="targetRoot">최상위 바인딩 타겟 객체</param>
+        /// <param name="slaveAddress">슬레이브 주소</param>
+        /// <returns>인터페이스 처리기 열거, 실제 형식은 InterfaceBinding 형식임</returns>
+        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, byte slaveAddress)
+            => SetBindings(targetRoot, point => { point.SlaveAddress = slaveAddress; });
     }
 }

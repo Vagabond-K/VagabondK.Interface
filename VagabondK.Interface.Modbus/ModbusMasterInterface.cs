@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.Modbus.Abstractions;
 using VagabondK.Protocols.Modbus;
@@ -10,6 +9,9 @@ using VagabondK.Protocols.Modbus.Data;
 
 namespace VagabondK.Interface.Modbus
 {
+    /// <summary>
+    /// Modbus 마스터 기반 인터페이스
+    /// </summary>
     public class ModbusMasterInterface : PollingInterface<ModbusPoint>, IWaitSendingInterface
     {
         class MergedReadRequest : ModbusReadRequest
@@ -30,8 +32,15 @@ namespace VagabondK.Interface.Modbus
         private readonly List<Exception> pollingExceptions = new List<Exception>();
         private readonly Dictionary<byte, ModbusWords> slaveWords = new Dictionary<byte, ModbusWords>();
 
+        /// <summary>
+        /// 1주기의 값 읽기 요청과 응답이 완료되었을 때 발생하는 이벤트
+        /// </summary>
         public override event PollingCompletedEventHandler PollingCompleted;
 
+        /// <summary>
+        /// 인터페이스 포인트가 추가되었을 경우 호출됨
+        /// </summary>
+        /// <param name="point">추가된 인터페이스 포인트</param>
         protected override void OnAdded(ModbusPoint point)
         {
             if (point == null) return;
@@ -40,6 +49,10 @@ namespace VagabondK.Interface.Modbus
             lock (settingChangedLock) isSettingChanged = true;
         }
 
+        /// <summary>
+        /// 인터페이스 포인트가 제거되었을 경우 호출됨
+        /// </summary>
+        /// <param name="point">제거된 인터페이스 포인트</param>
         protected override void OnRemoved(ModbusPoint point)
         {
             if (point == null) return;
@@ -53,6 +66,9 @@ namespace VagabondK.Interface.Modbus
             lock (settingChangedLock) isSettingChanged = true;
         }
 
+        /// <summary>
+        /// 값 읽기 요청들을 일괄 생성할 필요가 있을 때 호출되는 메서드
+        /// </summary>
         protected override void OnCreatePollingRequests()
         {
             readRequests.Clear();
@@ -119,6 +135,9 @@ namespace VagabondK.Interface.Modbus
             }
         }
 
+        /// <summary>
+        /// 값 읽기 요청 수행 메서드
+        /// </summary>
         protected override void OnPoll()
         {
             lock (settingChangedLock)
@@ -198,21 +217,59 @@ namespace VagabondK.Interface.Modbus
             PollingCompleted?.Invoke(this, new PollingCompletedEventArgs(succeed, pollingExceptions.Count > 0 ? new AggregateException(pollingExceptions) : null));
         }
 
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="master">Modbus 마스터</param>
         public ModbusMasterInterface(ModbusMaster master) : this(master, null) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="master">Modbus 마스터</param>
+        /// <param name="pollingTimeSpan">값 읽기 요청 주기</param>
         public ModbusMasterInterface(ModbusMaster master, int pollingTimeSpan) : this(master, pollingTimeSpan, null) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="master">Modbus 마스터</param>
+        /// <param name="points">인터페이스 포인트 열거</param>
         public ModbusMasterInterface(ModbusMaster master, IEnumerable<ModbusPoint> points) : this(master, 500, points) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="master">Modbus 마스터</param>
+        /// <param name="pollingTimeSpan">값 읽기 요청 주기</param>
+        /// <param name="points">인터페이스 포인트 열거</param>
         public ModbusMasterInterface(ModbusMaster master, int pollingTimeSpan, IEnumerable<ModbusPoint> points) : base(pollingTimeSpan, points)
         {
             Master = master ?? throw new ArgumentNullException(nameof(master));
         }
 
+        /// <summary>
+        /// Modbus 마스터
+        /// </summary>
         public ModbusMaster Master { get; }
 
+        /// <summary>
+        /// 자동 요청 병합 여부, true이면 근접한 데이터 주소를 하나의 요청으로 병합.
+        /// </summary>
         public bool AutoRequestMerge { get; set; } = true;
+        /// <summary>
+        /// 요청 병합 간격, 해당 간격 이하의 인터페이스 포인트는 하나의 요청으로 병합
+        /// </summary>
         public int RequestMergeSpan { get; set; }
+        /// <summary>
+        /// 요청과 요청 사이의 지연시간, 밀리초 단위.
+        /// </summary>
         public int DelayBetweenRequests { get; set; }
 
-        public IEnumerable<InterfaceHandler> SetBindings(object target, byte slaveAddress)
-            => SetBindings(target, point => { point.SlaveAddress = slaveAddress; });
+        /// <summary>
+        /// 인터페이스 바인딩 일괄 설정, InterfaceAttribute을 상속받은 특성을 이용하여 일괄 바인딩 설정 가능.
+        /// </summary>
+        /// <param name="targetRoot">최상위 바인딩 타겟 객체</param>
+        /// <param name="slaveAddress">슬레이브 주소</param>
+        /// <returns>인터페이스 처리기 열거, 실제 형식은 InterfaceBinding 형식임</returns>
+        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, byte slaveAddress)
+            => SetBindings(targetRoot, point => { point.SlaveAddress = slaveAddress; });
     }
 }

@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.Modbus.Abstractions;
 using VagabondK.Protocols.Modbus;
 
 namespace VagabondK.Interface.Modbus
 {
+    /// <summary>
+    /// Modbus Word(Holding Register, Input Register) 기반의 DateTime 형식 직렬화 인터페이스 포인트. 레지스터의 수치형 값을 이용하여 DateTime 값을 추출하거나 직렬화 함.
+    /// </summary>
     public class BytesDateTimePoint : MultiBytesPoint<DateTime>
     {
         private readonly object formatLock = new object();
@@ -36,10 +38,10 @@ namespace VagabondK.Interface.Modbus
         /// <param name="address">데이터 주소</param>
         /// <param name="format">서식 문자열</param>
         /// <param name="dateTimeKind">현지 시간 또는 UTC(지역 표준시)를 나타내는지 아니면 현지 시간 또는 UTC로 지정되지 않는지 여부</param>
-        /// <param name="skipFirstByte">첫 번째 바이트를 생략하고 두 번째 바이트부터 사용할 지 여부</param>
+        /// <param name="skipFirstByte">첫 번째 Byte 생략 여부</param>
         /// <param name="endian">Modbus 엔디안</param>
-        /// <param name="requestAddress">요청을 위한 데이터 주소</param>
-        /// <param name="requestLength">요청을 위한 데이터 개수</param>
+        /// <param name="requestAddress">요청 시작 주소</param>
+        /// <param name="requestLength">요청 길이</param>
         /// <param name="useMultiWriteFunction">쓰기 요청 시 다중 쓰기 Function(0x10) 사용 여부, Holding Register일 경우만 적용되고 Input Register일 경우는 무시함</param>
         /// <param name="handlers">인터페이스 처리기 열거</param>
         public BytesDateTimePoint(byte slaveAddress = 0, bool writable = true, ushort address = 0, string format = null, DateTimeKind dateTimeKind = DateTimeKind.Utc, bool skipFirstByte = false, ModbusEndian endian = ModbusEndian.AllBig, ushort? requestAddress = null, ushort? requestLength = null, bool? useMultiWriteFunction = null, IEnumerable<InterfaceHandler> handlers = null)
@@ -50,7 +52,14 @@ namespace VagabondK.Interface.Modbus
             UpdateByteCounts();
         }
 
+        /// <summary>
+        /// 값의 Byte 단위 개수, Format에 입력한 문자 수와 동일함.
+        /// </summary>
         protected override int BytesCount => format?.Length ?? 0;
+
+        /// <summary>
+        /// byte 배열와 DateTime 사이의 변환을 위한 형식 문자열. y: 년, M: 월, d: 일, H: 시, m: 분, s: 초, f: 밀리초. yyMdHmsff일 경우 총 9 Byte를 사용하며 년과 밀리초만 2 Byte로 직렬화 하고 나머지는 1 Byte를 사용함.
+        /// </summary>
         public string Format
         {
             get => format;
@@ -60,6 +69,10 @@ namespace VagabondK.Interface.Modbus
                     UpdateByteCounts();
             }
         }
+
+        /// <summary>
+        /// Modbus 데이터 상 DateTime 값의 DateTimeKind를 정의
+        /// </summary>
         public DateTimeKind DateTimeKind { get => dateTimeKind; set => SetProperty(ref dateTimeKind, value); }
 
         private void UpdateByteCounts()
@@ -109,6 +122,12 @@ namespace VagabondK.Interface.Modbus
                     : Enumerable.Repeat((byte)0, count - result.Length).Concat(result).ToArray();
             return result;
         }
+
+        /// <summary>
+        /// 값을 byte 배열로 직렬화
+        /// </summary>
+        /// <param name="value">직렬화 할 값</param>
+        /// <returns>직렬화 된 byte 배열</returns>
         protected override byte[] GetBytes(in DateTime value)
         {
             var dateTime = value;
@@ -159,8 +178,10 @@ namespace VagabondK.Interface.Modbus
             return ToBytesInRegisters(buffer, false);
         }
 
-
-
+        /// <summary>
+        /// 로컬 레지스터로부터 값 가져오기
+        /// </summary>
+        /// <returns>인터페이스 결과 값</returns>
         protected override DateTime GetValue()
         {
             lock (formatLock)
