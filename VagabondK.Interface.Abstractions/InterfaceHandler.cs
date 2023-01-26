@@ -14,6 +14,8 @@ namespace VagabondK.Interface
     {
         internal TValue value;
         private readonly Lazy<SendInterfaceValueCommand<TValue>> sendCommand;
+        private readonly GenericValueConverter<TValue> receiveConverter = new GenericValueConverter<TValue>();
+        private readonly GenericValueConverter<TValue> sendConverter = new GenericValueConverter<TValue>();
 
         /// <summary>
         /// 로컬 값 설정
@@ -27,9 +29,7 @@ namespace VagabondK.Interface
         }
 
         internal override void SetReceivedOtherTypeValue<T>(in T value, in DateTime? timeStamp)
-        {
-            SetReceivedValue(value.To<T, TValue>(), timeStamp);
-        }
+            => SetReceivedValue(receiveConverter.Convert(value), timeStamp);
 
         internal void SetReceivedValue(in TValue value, in DateTime? timeStamp)
         {
@@ -155,7 +155,7 @@ namespace VagabondK.Interface
         /// <param name="cancellationToken">비동기 작업 취소 토큰</param>
         /// <returns>전송 성공 여부 반환 태스크</returns>
         public override Task<bool> SendAsync<T>(in T value, in DateTime? timeStamp, in CancellationToken? cancellationToken)
-            => SendAsync(value.To<T, TValue>(), timeStamp);
+            => SendAsync(sendConverter.Convert(value), timeStamp);
 
         /// <summary>
         /// 값 전송
@@ -165,7 +165,7 @@ namespace VagabondK.Interface
         /// <param name="timeStamp">보낼 값의 적용 일시</param>
         /// <returns>전송 성공 여부</returns>
         public override bool Send<T>(in T value, in DateTime? timeStamp)
-            => Send(value.To<T, TValue>(), timeStamp);
+            => Send(sendConverter.Convert(value), timeStamp);
 
         /// <summary>
         /// 값 전속 커맨드를 가져옵니다.

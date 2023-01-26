@@ -202,13 +202,14 @@ namespace VagabondK.Interface.Modbus.Abstractions
 
         private SendDelegate send;
         private delegate bool SendDelegate(in TValue value, in DateTime? timeStamp);
+        private readonly GenericValueConverter<TValue> sendConverter = new GenericValueConverter<TValue>();
 
         private bool Send<T>(in T value, in DateTime? timeStamp)
         {
             if (this is ModbusPoint<T> point)
                 return point.send?.Invoke(value, timeStamp) ?? false;
             else
-                return send?.Invoke(value.To<T, TValue>(), timeStamp) ?? false;
+                return send?.Invoke(sendConverter.Convert(value), timeStamp) ?? false;
         }
 
         /// <summary>

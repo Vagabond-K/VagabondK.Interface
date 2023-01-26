@@ -33,12 +33,12 @@ namespace VagabondK.Interface.Modbus.Abstractions
             this.scale = scale;
         }
 
-        private static readonly Lazy<Func<TSerialize, double>> serializeToDouble = new Lazy<Func<TSerialize, double>>(() => GenericValueConverter.GetConverter<TSerialize, double>());
-        private static readonly Lazy<Func<TValue, double>> valueToDouble = new Lazy<Func<TValue, double>>(() => GenericValueConverter.GetConverter<TValue, double>());
-        private static readonly Lazy<Func<TSerialize, TValue>> serializeToValue = new Lazy<Func<TSerialize, TValue>>(() => GenericValueConverter.GetConverter<TSerialize, TValue>());
-        private static readonly Lazy<Func<double, TValue>> doubleToValue = new Lazy<Func<double, TValue>>(() => GenericValueConverter.GetConverter<double, TValue>());
-        private static readonly Lazy<Func<TValue, TSerialize>> valueToSerialize = new Lazy<Func<TValue, TSerialize>>(() => GenericValueConverter.GetConverter<TValue, TSerialize>());
-        private static readonly Lazy<Func<double, TSerialize>> doubleToSerialize = new Lazy<Func<double, TSerialize>>(() => GenericValueConverter.GetConverter<double, TSerialize>());
+        private static readonly Lazy<Func<TSerialize, double>> serializeToDouble = new Lazy<Func<TSerialize, double>>(() => GenericValueConverter<double>.GetConverter<TSerialize>());
+        private static readonly Lazy<Func<TValue, double>> valueToDouble = new Lazy<Func<TValue, double>>(() => GenericValueConverter<double>.GetConverter<TValue>());
+        private static readonly Lazy<Func<TSerialize, TValue>> serializeToValue = new Lazy<Func<TSerialize, TValue>>(() => GenericValueConverter<TValue>.GetConverter<TSerialize>());
+        private static readonly Lazy<Func<double, TValue>> doubleToValue = new Lazy<Func<double, TValue>>(() => GenericValueConverter<TValue>.GetConverter<double>());
+        private static readonly Lazy<Func<TValue, TSerialize>> valueToSerialize = new Lazy<Func<TValue, TSerialize>>(() => GenericValueConverter<TSerialize>.GetConverter<TValue>());
+        private static readonly Lazy<Func<double, TSerialize>> doubleToSerialize = new Lazy<Func<double, TSerialize>>(() => GenericValueConverter<TSerialize>.GetConverter<double>());
 
         private static double ToDouble(TValue value) => valueToDouble.Value.Invoke(value);
         private static double ToDouble(TSerialize serialize) => serializeToDouble.Value.Invoke(serialize);
