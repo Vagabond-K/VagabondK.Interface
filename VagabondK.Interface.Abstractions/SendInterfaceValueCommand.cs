@@ -1,14 +1,31 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows.Input;
+using VagabondK.Interface.Abstractions;
 
 namespace VagabondK.Interface
 {
     /// <summary>
     /// 값 전송을 위한 커맨드
     /// </summary>
+    public interface ISendInterfaceValueCommand : ICommand
+    {
+        /// <summary>
+        /// 인터페이스 처리기
+        /// </summary>
+        InterfaceHandler InterfaceHandler { get; }
+
+        /// <summary>
+        /// 값을 전송 중인지 여부를 가져옵니다.
+        /// </summary>
+        bool IsBusy { get; }
+    }
+
+    /// <summary>
+    /// 값 전송을 위한 커맨드
+    /// </summary>
     /// <typeparam name="TValue">전송할 값의 형식</typeparam>
-    public class SendInterfaceValueCommand<TValue> : ICommand, INotifyPropertyChanged
+    class SendInterfaceValueCommand<TValue> : ISendInterfaceValueCommand, INotifyPropertyChanged
     {
         internal SendInterfaceValueCommand(InterfaceHandler<TValue> handler)
         {
@@ -34,7 +51,7 @@ namespace VagabondK.Interface
         public bool IsBusy
         {
             get => isBusy;
-            set
+            private set
             {
                 if (isBusy != value)
                 {
@@ -44,6 +61,11 @@ namespace VagabondK.Interface
                 }
             }
         }
+
+        /// <summary>
+        /// 인터페이스 처리기
+        /// </summary>
+        public InterfaceHandler InterfaceHandler => handler;
 
         /// <summary>
         /// 명령을 현재 상태에서 실행할 수 있는지를 결정하는 메서드를 정의합니다.

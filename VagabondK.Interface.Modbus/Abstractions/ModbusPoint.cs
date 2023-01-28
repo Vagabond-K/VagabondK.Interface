@@ -126,10 +126,8 @@ namespace VagabondK.Interface.Modbus.Abstractions
     /// Modbus 인터페이스 포인트
     /// </summary>
     /// <typeparam name="TValue">값 형식</typeparam>
-    public abstract class ModbusPoint<TValue> : ModbusPoint
+    public abstract class ModbusPoint<TValue> : ModbusPoint, IInterfaceHandlerContainer<TValue>
     {
-        private InterfaceHandler<TValue> defaultHandler;
-
         /// <summary>
         /// 생성자
         /// </summary>
@@ -202,15 +200,11 @@ namespace VagabondK.Interface.Modbus.Abstractions
 
         private SendDelegate send;
         private delegate bool SendDelegate(in TValue value, in DateTime? timeStamp);
-        private readonly GenericValueConverter<TValue> sendConverter = new GenericValueConverter<TValue>();
 
         private bool Send<T>(in T value, in DateTime? timeStamp)
-        {
-            if (this is ModbusPoint<T> point)
-                return point.send?.Invoke(value, timeStamp) ?? false;
-            else
-                return send?.Invoke(sendConverter.Convert(value), timeStamp) ?? false;
-        }
+            => ((this is ModbusPoint<T> point)
+            ? point.send?.Invoke(value, timeStamp)
+            : send?.Invoke(value.To<T, TValue>(), timeStamp)) ?? false;
 
         /// <summary>
         /// 비동기로 값을 전송하고자 할 때 호출되는 메서드
@@ -234,21 +228,5 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// <param name="timeStamp">전송할 값의 적용 일시</param>
         /// <returns>전송 성공 여부</returns>
         protected override bool OnSendRequested<T>(in T value, in DateTime? timeStamp) => Send(value, timeStamp);
-
-        /// <summary>
-        /// 기본 인터페이스 처리기를 가져옵니다.
-        /// </summary>
-        public InterfaceHandler<TValue> DefaultHandler
-        {
-            get
-            {
-                if (defaultHandler == null)
-                {
-                    defaultHandler = new InterfaceHandler<TValue>();
-                    Add(defaultHandler);
-                }
-                return defaultHandler;
-            }
-        }
     }
 }

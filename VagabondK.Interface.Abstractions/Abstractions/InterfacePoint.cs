@@ -10,9 +10,10 @@ namespace VagabondK.Interface.Abstractions
     /// <summary>
     /// 인터페이스 포인트
     /// </summary>
-    public abstract class InterfacePoint : IEnumerable<InterfaceHandler>
+    public abstract class InterfacePoint : IInterfaceHandlerContainer
     {
         private readonly List<WeakReference<InterfaceHandler>> handlers = new List<WeakReference<InterfaceHandler>>();
+        private InterfaceHandler defaultHandler = null;
 
         private InterfaceHandler GetLastUpdatedHandler()
         {
@@ -156,6 +157,25 @@ namespace VagabondK.Interface.Abstractions
         public object Interface { get; internal set; }
 
         /// <summary>
+        /// 기본 인터페이스 처리기를 가져옵니다.
+        /// </summary>
+        public InterfaceHandler DefaultHandler
+        {
+            get
+            {
+                if (defaultHandler == null)
+                {
+                    var interfaceType = GetType().GetInterfaces().FirstOrDefault(
+                        type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IInterfaceHandlerContainer<>));
+
+                    if (interfaceType != null)
+                        defaultHandler = Activator.CreateInstance(typeof(InterfaceHandler<>).MakeGenericType(interfaceType.GenericTypeArguments[0])) as InterfaceHandler;
+                }
+                return defaultHandler;
+            }
+        }
+
+        /// <summary>
         /// 인터페이스 처리기 생성
         /// </summary>
         /// <typeparam name="TValue">값 형식</typeparam>
@@ -166,7 +186,6 @@ namespace VagabondK.Interface.Abstractions
             Add(result);
             return result;
         }
-
 
         /// <summary>
         /// 인터페이스 바인딩 설정

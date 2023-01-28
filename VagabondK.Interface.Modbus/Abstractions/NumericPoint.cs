@@ -33,22 +33,8 @@ namespace VagabondK.Interface.Modbus.Abstractions
             this.scale = scale;
         }
 
-        private static readonly Lazy<Func<TSerialize, double>> serializeToDouble = new Lazy<Func<TSerialize, double>>(() => GenericValueConverter<double>.GetConverter<TSerialize>());
-        private static readonly Lazy<Func<TValue, double>> valueToDouble = new Lazy<Func<TValue, double>>(() => GenericValueConverter<double>.GetConverter<TValue>());
-        private static readonly Lazy<Func<TSerialize, TValue>> serializeToValue = new Lazy<Func<TSerialize, TValue>>(() => GenericValueConverter<TValue>.GetConverter<TSerialize>());
-        private static readonly Lazy<Func<double, TValue>> doubleToValue = new Lazy<Func<double, TValue>>(() => GenericValueConverter<TValue>.GetConverter<double>());
-        private static readonly Lazy<Func<TValue, TSerialize>> valueToSerialize = new Lazy<Func<TValue, TSerialize>>(() => GenericValueConverter<TSerialize>.GetConverter<TValue>());
-        private static readonly Lazy<Func<double, TSerialize>> doubleToSerialize = new Lazy<Func<double, TSerialize>>(() => GenericValueConverter<TSerialize>.GetConverter<double>());
-
-        private static double ToDouble(TValue value) => valueToDouble.Value.Invoke(value);
-        private static double ToDouble(TSerialize serialize) => serializeToDouble.Value.Invoke(serialize);
-        private static TValue ToValue(TSerialize serialize) => serializeToValue.Value.Invoke(serialize);
-        private static TValue ToValue(double value) => doubleToValue.Value.Invoke(value);
-        private static TSerialize ToSerialize(TValue value) => valueToSerialize.Value.Invoke(value);
-        private static TSerialize ToSerialize(double value) => doubleToSerialize.Value.Invoke(value);
-
-        private TValue DoScale(TSerialize serialize) => ToValue(ToDouble(serialize) * Scale);
-        private TSerialize DoReverseScale(TValue value) => ToSerialize(ToDouble(value) / Scale);
+        private TValue DoScale(TSerialize serialize) => (serialize.To<TSerialize, double>() * Scale).To<double, TValue>();
+        private TSerialize DoReverseScale(TValue value) => (value.To<TValue, double>() / Scale).To<double, TSerialize>();
 
         /// <summary>
         /// 로컬 레지스터를 이용하여 직렬화 형식으로 역 직렬화 수행.
@@ -72,7 +58,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         {
             var bytes = typeof(TValue) == typeof(TSerialize) && scale == 1
             ? (this as NumericPoint<TValue, TValue>).Serialize(value)
-            : Serialize(scale == 1 ? ToSerialize(value) : DoReverseScale(value));
+            : Serialize(scale == 1 ? value.To<TValue, TSerialize>() : DoReverseScale(value));
 
             return ToBytesInRegisters(bytes, bytes.Length > 1);
         }
@@ -83,7 +69,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// <returns>인터페이스 결과 값</returns>
         protected override TValue GetValue() => typeof(TValue) == typeof(TSerialize) && scale == 1
             ? (this as NumericPoint<TValue, TValue>).Deserialize()
-            : scale == 1 ? ToValue(Deserialize()) : DoScale(Deserialize());
+            : scale == 1 ? Deserialize().To<TSerialize, TValue>() : DoScale(Deserialize());
 
         /// <summary>
         /// 수치형 값의 스케일(배율)

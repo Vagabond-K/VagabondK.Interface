@@ -26,10 +26,10 @@ namespace SimpleModbusMasterSample
             {
                 Timeout = 3000
             };
-
+            
             var modbus = new ModbusMasterInterface(client)
             {
-                //new ModbusBooleanPoint(1, true, 0)
+                //new BitPoint(1, true, 0)
                 //{
                 //    new InterfaceHandler<float>()
                 //}

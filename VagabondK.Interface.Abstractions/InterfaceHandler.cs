@@ -14,8 +14,6 @@ namespace VagabondK.Interface
     {
         internal TValue value;
         private readonly Lazy<SendInterfaceValueCommand<TValue>> sendCommand;
-        private readonly GenericValueConverter<TValue> receiveConverter = new GenericValueConverter<TValue>();
-        private readonly GenericValueConverter<TValue> sendConverter = new GenericValueConverter<TValue>();
 
         /// <summary>
         /// 로컬 값 설정
@@ -29,7 +27,7 @@ namespace VagabondK.Interface
         }
 
         internal override void SetReceivedOtherTypeValue<T>(in T value, in DateTime? timeStamp)
-            => SetReceivedValue(receiveConverter.Convert(value), timeStamp);
+            => SetReceivedValue(value.To<T, TValue>(), timeStamp);
 
         internal void SetReceivedValue(in TValue value, in DateTime? timeStamp)
         {
@@ -37,6 +35,7 @@ namespace VagabondK.Interface
             {
                 SetLocalValue(value, timeStamp);
                 OnReceived(value, timeStamp);
+                OnReceived();
                 Received?.Invoke(this);
             }
         }
@@ -81,9 +80,21 @@ namespace VagabondK.Interface
         public TValue Value { get => value; protected set => SetProperty(ref this.value, value); }
 
         /// <summary>
+        /// 인터페이스 값의 형식
+        /// </summary>
+        public override Type ValueType => typeof(TValue);
+
+        /// <summary>
         /// 값을 수신했을 때 발생하는 이벤트입니다.
         /// </summary>
-        public event ReceivedEventHandler<TValue> Received;
+        public new event ReceivedEventHandler<TValue> Received;
+
+        /// <summary>
+        /// 로컬 값 가져오기
+        /// </summary>
+        /// <typeparam name="T">가져올 값 형식</typeparam>
+        /// <returns>로컬 값</returns>
+        public override T GetValue<T>() => this is InterfaceHandler<T> handler ? handler.value : value.To<TValue, T>();
 
         /// <summary>
         /// 비동기로 값 전송
@@ -155,7 +166,7 @@ namespace VagabondK.Interface
         /// <param name="cancellationToken">비동기 작업 취소 토큰</param>
         /// <returns>전송 성공 여부 반환 태스크</returns>
         public override Task<bool> SendAsync<T>(in T value, in DateTime? timeStamp, in CancellationToken? cancellationToken)
-            => SendAsync(sendConverter.Convert(value), timeStamp);
+            => SendAsync(value.To<T, TValue>(), timeStamp);
 
         /// <summary>
         /// 값 전송
@@ -165,11 +176,11 @@ namespace VagabondK.Interface
         /// <param name="timeStamp">보낼 값의 적용 일시</param>
         /// <returns>전송 성공 여부</returns>
         public override bool Send<T>(in T value, in DateTime? timeStamp)
-            => Send(sendConverter.Convert(value), timeStamp);
+            => Send(value.To<T, TValue>(), timeStamp);
 
         /// <summary>
-        /// 값 전속 커맨드를 가져옵니다.
+        /// 값 전송 커맨드를 가져옵니다.
         /// </summary>
-        public virtual ICommand SendCommand => sendCommand.Value;
+        public override ISendInterfaceValueCommand SendCommand => sendCommand.Value;
     }
 }

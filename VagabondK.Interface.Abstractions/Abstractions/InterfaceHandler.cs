@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace VagabondK.Interface.Abstractions
 {
@@ -39,6 +40,19 @@ namespace VagabondK.Interface.Abstractions
         /// <returns>전송 성공 여부 반환 태스크</returns>
         public abstract bool SendLocalValue();
 
+        /// <summary>
+        /// 로컬 값 가져오기
+        /// </summary>
+        /// <typeparam name="T">가져올 값 형식</typeparam>
+        /// <returns>로컬 값</returns>
+        public abstract T GetValue<T>();
+
+        /// <summary>
+        /// 값을 수신했을 때 발생하는 이벤트입니다.
+        /// </summary>
+        public event ReceivedEventHandler Received;
+
+        internal void OnReceived() => Received?.Invoke(this);
         internal abstract void SetReceivedOtherTypeValue<T>(in T value, in DateTime? timeStamp);
 
         internal void RaiseErrorOccurred(Exception exception, ErrorDirection direction)
@@ -78,6 +92,11 @@ namespace VagabondK.Interface.Abstractions
         /// 인터페이스 값의 적용 일시
         /// </summary>
         public DateTime? TimeStamp { get => timeStamp; internal set => SetProperty(ref timeStamp, value); }
+
+        /// <summary>
+        /// 인터페이스 값의 형식
+        /// </summary>
+        public abstract Type ValueType { get; }
 
         /// <summary>
         /// 인터페이스 오류 발생 이벤트
@@ -137,5 +156,10 @@ namespace VagabondK.Interface.Abstractions
         /// <param name="timeStamp">보낼 값의 적용 일시</param>
         /// <returns>전송 성공 여부</returns>
         public abstract bool Send<T>(in T value, in DateTime? timeStamp);
+
+        /// <summary>
+        /// 값 전송 커맨드를 가져옵니다.
+        /// </summary>
+        public abstract ISendInterfaceValueCommand SendCommand { get; }
     }
 }

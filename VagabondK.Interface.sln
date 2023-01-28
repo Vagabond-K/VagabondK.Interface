@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleModbusMasterSample", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleModbusSlaveSample", "Samples\Modbus\SimpleModbusSlaveSample\SimpleModbusSlaveSample.csproj", "{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VagabondK.Interface.LSElectric", "VagabondK.Interface.LSElectric\VagabondK.Interface.LSElectric.csproj", "{57C28610-1103-434F-BC30-1582FF7A23A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57C28610-1103-434F-BC30-1582FF7A23A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57C28610-1103-434F-BC30-1582FF7A23A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57C28610-1103-434F-BC30-1582FF7A23A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57C28610-1103-434F-BC30-1582FF7A23A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
