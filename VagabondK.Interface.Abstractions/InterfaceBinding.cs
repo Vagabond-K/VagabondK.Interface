@@ -45,7 +45,7 @@ namespace VagabondK.Interface
             }
         }
 
-        private void UpdateMember()
+        private void UpdateBindingMethods()
         {
             if (target != null && !string.IsNullOrWhiteSpace(memberName))
             {
@@ -323,7 +323,7 @@ namespace VagabondK.Interface
                             oldNotifyPropertyChanged.PropertyChanged -= OnPropertyChanged;
 
                         target = value;
-                        UpdateMember();
+                        UpdateBindingMethods();
 
                         if (rollbackOnSendError)
                         {
@@ -353,7 +353,7 @@ namespace VagabondK.Interface
                     if (!Equals(memberName, value))
                     {
                         memberName = value;
-                        UpdateMember();
+                        UpdateBindingMethods();
                         RaisePropertyChanged();
                     }
                 }
