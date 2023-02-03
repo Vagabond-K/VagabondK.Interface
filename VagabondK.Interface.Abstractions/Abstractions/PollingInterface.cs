@@ -9,11 +9,12 @@ namespace VagabondK.Interface.Abstractions
     /// 주기적으로 값 읽기 요청을 수행하는 인터페이스를 정의합니다.
     /// </summary>
     /// <typeparam name="TPoint">인터페이스 포인트 형식</typeparam>
-    public abstract class PollingInterface<TPoint> : Interface<TPoint> where TPoint : InterfacePoint
+    public abstract class PollingInterface<TPoint> : Interface<TPoint>, IDisposable where TPoint : InterfacePoint
     {
         private Thread thread;
         private int pollingTimeSpan = 500;
         private bool isRunning;
+        private bool disposedValue;
         private readonly object startStopLock = new object();
 
         private void RunPollingLoop()
@@ -55,7 +56,7 @@ namespace VagabondK.Interface.Abstractions
         public abstract event PollingCompletedEventHandler PollingCompleted;
 
         /// <summary>
-        /// 값 읽기 요청 주기
+        /// 값 읽기 요청 주기. 기본값은 500 밀리초.
         /// </summary>
         public int PollingTimeSpan
         {
@@ -120,6 +121,31 @@ namespace VagabondK.Interface.Abstractions
         public void Poll()
         {
             OnPoll();
+        }
+
+        /// <summary>
+        /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.
+        /// </summary>
+        /// <param name="disposing">Dispose 메서드 수행 중인지 여부</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    Stop();
+                }
+                disposedValue = true;
+            }
+        }
+
+        /// <summary>
+        /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -3,15 +3,15 @@
 namespace VagabondK.Interface.Modbus.Abstractions
 {
     /// <summary>
-    /// Modbus 바인딩 멤버 정의를 위한 특성
+    /// Modbus 인터페이스 기반 바인딩 멤버 정의를 위한 특성
     /// </summary>
-    public abstract class ModbusBindingAttribute : InterfaceBindingAttribute
+    public abstract class ModbusPointAttribute : InterfacePointAttribute
     {
         /// <summary>
         /// 생성자
         /// </summary>
         /// <param name="address">데이터 주소</param>
-        protected ModbusBindingAttribute(ushort address)
+        protected ModbusPointAttribute(ushort address)
         {
             Address = address;
         }
@@ -20,7 +20,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// </summary>
         /// <param name="slaveAddress">슬레이브 주소</param>
         /// <param name="address">데이터 주소</param>
-        protected ModbusBindingAttribute(byte slaveAddress, ushort address) : this(address)
+        protected ModbusPointAttribute(byte slaveAddress, ushort address) : this(address)
         {
             SlaveAddress = slaveAddress;
         }
@@ -30,7 +30,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// <param name="address">데이터 주소</param>
         /// <param name="requestAddress">요청 시작 주소</param>
         /// <param name="requestLength">요청 길이</param>
-        protected ModbusBindingAttribute(ushort address, ushort requestAddress, ushort requestLength) : this(address)
+        protected ModbusPointAttribute(ushort address, ushort requestAddress, ushort requestLength) : this(address)
         {
             RequestAddress = requestAddress;
             RequestLength = requestLength;
@@ -42,7 +42,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// <param name="address">데이터 주소</param>
         /// <param name="requestAddress">요청 시작 주소</param>
         /// <param name="requestLength">요청 길이</param>
-        protected ModbusBindingAttribute(byte slaveAddress, ushort address, ushort requestAddress, ushort requestLength) : this(slaveAddress, address, requestAddress)
+        protected ModbusPointAttribute(byte slaveAddress, ushort address, ushort requestAddress, ushort requestLength) : this(slaveAddress, address, requestAddress)
         {
             RequestLength = requestLength;
         }

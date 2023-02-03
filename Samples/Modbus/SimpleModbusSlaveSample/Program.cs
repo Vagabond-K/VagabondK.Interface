@@ -20,7 +20,7 @@ namespace SimpleModbusSlaveSample
             var slave = new ModbusSlaveInterface(slaveService);
             var target = new LocalObject();
 
-            foreach (var handler in slave.SetBindings(target))
+            foreach (var handler in slave.SetBindings(target).Values)
                 handler.Point.SendLocalValue();
 
             channel.Start();

@@ -1,11 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net461;netcoreapp3.1</TargetFrameworks>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>Vagabond K</Authors>
+    <Company>Vagabond K</Company>
+    <Version>1.0.0</Version>
+    <PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Vagabond-K/VagabondK.Interface/tree/master/VagabondK.Interface.LSElectric</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Vagabond-K/VagabondK.Interface/tree/master/VagabondK.Interface.LSElectric</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Description>LS ELECTRIC의 Cnet, FEnet 등의 프로토콜을 이용한 데이터 인터페이스에 대한 기능을 모아놓은 라이브러리입니다.</Description>
+    <PackageIcon>nugetIcon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="VagabondK.Protocols.LSElectric" Version="1.1.7" />
+    <None Include="..\nugetIcon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="VagabondK.Protocols.LSElectric" Version="1.1.8" />
   </ItemGroup>
 
   <ItemGroup>

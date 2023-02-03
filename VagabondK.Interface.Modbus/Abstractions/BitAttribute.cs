@@ -3,7 +3,7 @@
     /// <summary>
     /// Modbus Bit(Coil, Discrete Input) 형식 바인딩 멤버 정의를 위한 특성
     /// </summary>
-    public abstract class BitAttribute : ModbusBindingAttribute
+    public abstract class BitAttribute : ModbusPointAttribute
     {
         /// <summary>
         /// 생성자

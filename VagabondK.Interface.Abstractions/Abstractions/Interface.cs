@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Reflection;
 
@@ -209,39 +210,42 @@ namespace VagabondK.Interface.Abstractions
         /// 인터페이스 바인딩 일괄 설정, InterfaceAttribute을 상속받은 특성을 이용하여 일괄 바인딩 설정 가능.
         /// </summary>
         /// <param name="targetRoot">최상위 바인딩 타겟 객체</param>
-        /// <returns>인터페이스 처리기 열거, 실제 형식은 InterfaceBinding 형식임</returns>
-        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot) => SetBindings(targetRoot, null, null);
+        /// <returns>인터페이스 처리기 사전. 키는 바인딩 경로 문자열이며 InterfaceBinding 형식의 인터페이스 처리기를 찾아볼 수 있음.</returns>
+        public Dictionary<string, InterfaceHandler> SetBindings(object targetRoot) => SetBindings(targetRoot, null, null);
 
         /// <summary>
         /// 인터페이스 바인딩 일괄 설정, InterfaceAttribute을 상속받은 특성을 이용하여 일괄 바인딩 설정 가능.
         /// </summary>
         /// <param name="targetRoot">최상위 바인딩 타겟 객체</param>
         /// <param name="initPoint">인터페이스 포인트 초기화 동작</param>
-        /// <returns>인터페이스 처리기 열거, 실제 형식은 InterfaceBinding 형식임</returns>
-        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, Action<TPoint> initPoint) => SetBindings(targetRoot, initPoint, null);
+        /// <returns>인터페이스 처리기 사전. 키는 바인딩 경로 문자열이며 InterfaceBinding 형식의 인터페이스 처리기를 찾아볼 수 있음.</returns>
+        public Dictionary<string, InterfaceHandler> SetBindings(object targetRoot, Action<TPoint> initPoint) => SetBindings(targetRoot, initPoint, null);
 
         /// <summary>
         /// 인터페이스 바인딩 일괄 설정, InterfaceAttribute을 상속받은 특성을 이용하여 일괄 바인딩 설정 가능.
         /// </summary>
         /// <param name="targetRoot">최상위 바인딩 타겟 객체</param>
         /// <param name="initHandler">인터페이스 처리기 초기화 동작</param>
-        /// <returns>인터페이스 처리기 열거, 실제 형식은 InterfaceBinding 형식임</returns>
-        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, Action<InterfaceHandler> initHandler) => SetBindings(targetRoot, null, initHandler);
+        /// <returns>인터페이스 처리기 사전. 키는 바인딩 경로 문자열이며 InterfaceBinding 형식의 인터페이스 처리기를 찾아볼 수 있음.</returns>
+        public Dictionary<string, InterfaceHandler> SetBindings(object targetRoot, Action<InterfaceHandler> initHandler) => SetBindings(targetRoot, null, initHandler);
 
-        private IEnumerable<InterfaceHandler> SetBindings(object targetRoot, Action<TPoint> initPoint, Action<InterfaceHandler> initHandler)
+        private Dictionary<string, InterfaceHandler> SetBindings(object targetRoot, Action<TPoint> initPoint, Action<InterfaceHandler> initHandler)
         {
-            if (targetRoot == null) return Enumerable.Empty<InterfaceHandler>();
+            if (targetRoot == null) throw new ArgumentNullException(nameof(targetRoot));
 
-            var result = new List<InterfaceHandler>();
+            var result = new Dictionary<string, InterfaceHandler>();
 
             InterfaceAttribute rootAttribute = null;
             var objects = new HashSet<object>();
-            var queue = new Queue();
-            queue.Enqueue(targetRoot);
+            var queue = new Queue<BindingSettingQueueItem>();
+            queue.Enqueue(new BindingSettingQueueItem(string.Empty, targetRoot, null));
 
             while (queue.Count > 0)
             {
-                var target = queue.Dequeue();
+                var item = queue.Dequeue();
+
+                var name = item.name;
+                var target = item.target;
                 if (!objects.Add(target)) continue;
 
                 var targetType = target.GetType();
@@ -253,50 +257,76 @@ namespace VagabondK.Interface.Abstractions
 
                 foreach (var memberInfo in targetType.GetMembers(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
                 {
-                    var attributes = memberInfo.GetCustomAttributes(typeof(InterfaceBindingAttribute), true);
+                    var attributes = memberInfo.GetCustomAttributes(typeof(InterfacePointAttribute), true);
 
                     Type memberType;
-                    object subObject = null;
+                    object memberValue = null;
                     if (memberInfo is PropertyInfo property)
                     {
                         memberType = property.PropertyType;
                         if (memberType.IsClass && property.GetMethod != null)
-                            subObject = property.GetValue(target);
+                            memberValue = property.GetValue(target);
                     }
                     else if (memberInfo is FieldInfo field)
                     {
                         memberType = field.FieldType;
                         if (memberType.IsClass)
-                            subObject = field.GetValue(target);
+                            memberValue = field.GetValue(target);
                     }
                     else continue;
 
-                    foreach (var attribute in attributes)
+                    var memberPath = string.IsNullOrEmpty(name) ? memberInfo.Name : $"{name}.{memberInfo.Name}";
+
+                    if (memberValue is TPoint declaredPoint)
                     {
-                        if (attribute is InterfaceBindingAttribute bindingAttribute
-                            && bindingAttribute.GetPoint(memberInfo, rootAttribute) is TPoint point)
-                        {
-                            var handler = (InterfaceHandler)Activator.CreateInstance(typeof(InterfaceBinding<>).MakeGenericType(memberType));
-                            var binding = handler as IInterfaceBinding;
-                            binding.Target = target;
-                            binding.MemberName = memberInfo.Name;
-                            binding.Mode = bindingAttribute.Mode;
-                            binding.RollbackOnSendError = bindingAttribute.RollbackOnSendError;
-                            point.Add(handler);
-                            initPoint?.Invoke(point);
-                            initHandler?.Invoke(handler);
-
-                            Add(point);
-                            result.Add(handler);
-                        }
+                        Add(declaredPoint);
+                        var handler = declaredPoint.DefaultHandler;
+                        if (handler != null)
+                            result[memberPath] = handler;
                     }
+                    else
+                    {
+                        foreach (var attribute in attributes)
+                        {
+                            if (attribute is InterfacePointAttribute bindingAttribute
+                                && bindingAttribute.GetPoint(memberInfo, rootAttribute) is TPoint point)
+                            {
+                                var handler = (InterfaceHandler)Activator.CreateInstance(typeof(InterfaceBinding<>).MakeGenericType(memberType));
+                                var binding = handler as IInterfaceBinding;
+                                binding.Target = target;
+                                binding.MemberName = memberInfo.Name;
+                                binding.Mode = bindingAttribute.Mode;
+                                binding.RollbackOnSendError = bindingAttribute.RollbackOnSendError;
+                                point.Add(handler);
+                                initPoint?.Invoke(point);
+                                initHandler?.Invoke(handler);
 
-                    if (subObject != null)
-                        queue.Enqueue(subObject);
+                                Add(point);
+                                result[memberPath] = handler;
+                            }
+                        }
+
+                        if (memberValue != null && !item.parentTypes.Contains(memberType))
+                            queue.Enqueue(new BindingSettingQueueItem(memberPath, memberValue, item.parentTypes));
+                    }
                 }
             }
 
             return result;
+        }
+
+        class BindingSettingQueueItem
+        {
+            public BindingSettingQueueItem(string name, object target, HashSet<Type> parentTypes)
+            {
+                this.name = name;
+                this.target = target;
+                this.parentTypes = parentTypes == null ? new HashSet<Type>() : new HashSet<Type>(parentTypes);
+                this.parentTypes.Add(target.GetType());
+            }
+            public string name;
+            public object target;
+            public HashSet<Type> parentTypes;
         }
     }
 }

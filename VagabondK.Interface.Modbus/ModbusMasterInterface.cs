@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.Modbus.Abstractions;
+using VagabondK.Protocols;
 using VagabondK.Protocols.Modbus;
 using VagabondK.Protocols.Modbus.Data;
+using VagabondK.Protocols.Modbus.Serialization;
 
 namespace VagabondK.Interface.Modbus
 {
@@ -151,13 +153,11 @@ namespace VagabondK.Interface.Modbus
 
             bool succeed = false;
             pollingExceptions.Clear();
-            foreach (var request in readRequests)
-            {
-                if (DelayBetweenRequests > 0 && readRequests[0] != request)
-                    Thread.Sleep(DelayBetweenRequests);
 
+            void runRequest(MergedReadRequest request)
+            {
                 request.TransactionID = null;
-                
+
                 try
                 {
                     var response = Master.Request(request);
@@ -214,6 +214,16 @@ namespace VagabondK.Interface.Modbus
                 }
             }
 
+            if (PollingParallelRequests && Master.Serializer is ModbusTcpSerializer)
+                readRequests.AsParallel().ForAll(request => runRequest(request));
+            else
+                foreach (var request in readRequests)
+                {
+                    runRequest(request);
+                    if (DelayBetweenPollingRequests > 0)
+                        Thread.Sleep(DelayBetweenPollingRequests);
+                }
+
             PollingCompleted?.Invoke(this, new PollingCompletedEventArgs(succeed, pollingExceptions.Count > 0 ? new AggregateException(pollingExceptions) : null));
         }
 
@@ -226,7 +236,7 @@ namespace VagabondK.Interface.Modbus
         /// 생성자
         /// </summary>
         /// <param name="master">Modbus 마스터</param>
-        /// <param name="pollingTimeSpan">값 읽기 요청 주기</param>
+        /// <param name="pollingTimeSpan">값 읽기 요청 주기. 기본값은 500 밀리초.</param>
         public ModbusMasterInterface(ModbusMaster master, int pollingTimeSpan) : this(master, pollingTimeSpan, null) { }
         /// <summary>
         /// 생성자
@@ -238,7 +248,7 @@ namespace VagabondK.Interface.Modbus
         /// 생성자
         /// </summary>
         /// <param name="master">Modbus 마스터</param>
-        /// <param name="pollingTimeSpan">값 읽기 요청 주기</param>
+        /// <param name="pollingTimeSpan">값 읽기 요청 주기. 기본값은 500 밀리초.</param>
         /// <param name="points">인터페이스 포인트 열거</param>
         public ModbusMasterInterface(ModbusMaster master, int pollingTimeSpan, IEnumerable<ModbusPoint> points) : base(pollingTimeSpan, points)
         {
@@ -261,15 +271,29 @@ namespace VagabondK.Interface.Modbus
         /// <summary>
         /// 요청과 요청 사이의 지연시간, 밀리초 단위.
         /// </summary>
-        public int DelayBetweenRequests { get; set; }
+        public int DelayBetweenPollingRequests { get; set; }
+        /// <summary>
+        /// 요청을 병렬로 수행할 지 여부. 병렬 요청은 ModbusMaster의 Serializer가 ModbusTcpSerializer일 경우에만 사용 가능.
+        /// </summary>
+        public bool PollingParallelRequests { get; set; }
 
         /// <summary>
         /// 인터페이스 바인딩 일괄 설정, InterfaceAttribute을 상속받은 특성을 이용하여 일괄 바인딩 설정 가능.
         /// </summary>
         /// <param name="targetRoot">최상위 바인딩 타겟 객체</param>
         /// <param name="slaveAddress">슬레이브 주소</param>
-        /// <returns>인터페이스 처리기 열거, 실제 형식은 InterfaceBinding 형식임</returns>
-        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, byte slaveAddress)
+        /// <returns>인터페이스 처리기 사전. 키는 바인딩 경로 문자열이며 InterfaceBinding 형식의 인터페이스 처리기를 찾아볼 수 있음.</returns>
+        public Dictionary<string, InterfaceHandler> SetBindings(object targetRoot, byte slaveAddress)
             => SetBindings(targetRoot, point => { point.SlaveAddress = slaveAddress; });
+
+        /// <summary>
+        /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.
+        /// </summary>
+        /// <param name="disposing">Dispose 메서드 수행 중인지 여부</param>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            Master?.Dispose();
+        }
     }
 }

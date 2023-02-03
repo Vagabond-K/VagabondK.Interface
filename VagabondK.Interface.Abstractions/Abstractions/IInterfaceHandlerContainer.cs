@@ -5,7 +5,7 @@ using System.Text;
 namespace VagabondK.Interface.Abstractions
 {
     /// <summary>
-    /// 인터페이스 핸들러 컨테이너
+    /// 인터페이스 처리기 컨테이너
     /// </summary>
     public interface IInterfaceHandlerContainer : IEnumerable<InterfaceHandler>
     {
@@ -75,7 +75,7 @@ namespace VagabondK.Interface.Abstractions
     }
 
     /// <summary>
-    /// 인터페이스 핸들러 컨테이너
+    /// 인터페이스 처리기 컨테이너
     /// </summary>
     /// <typeparam name="TValue">값 형식</typeparam>
     public interface IInterfaceHandlerContainer<TValue> : IInterfaceHandlerContainer

@@ -11,7 +11,7 @@ namespace VagabondK.Interface.Modbus
     /// <summary>
     /// Modbus 슬레이브 기반 인터페이스
     /// </summary>
-    public class ModbusSlaveInterface : Interface<ModbusPoint>
+    public class ModbusSlaveInterface : Interface<ModbusPoint>, IDisposable
     {
         class AddressMap
         {
@@ -23,6 +23,7 @@ namespace VagabondK.Interface.Modbus
 
         private readonly Dictionary<ushort, AddressMap> addressMaps = new Dictionary<ushort, AddressMap>();
         private readonly Dictionary<ushort, List<ModbusPoint>> slaveMaps = new Dictionary<ushort, List<ModbusPoint>>();
+        private bool disposedValue;
 
         /// <summary>
         /// 생성자
@@ -284,8 +285,34 @@ namespace VagabondK.Interface.Modbus
         /// </summary>
         /// <param name="targetRoot">최상위 바인딩 타겟 객체</param>
         /// <param name="slaveAddress">슬레이브 주소</param>
-        /// <returns>인터페이스 처리기 열거, 실제 형식은 InterfaceBinding 형식임</returns>
-        public IEnumerable<InterfaceHandler> SetBindings(object targetRoot, byte slaveAddress)
+        /// <returns>인터페이스 처리기 사전. 키는 바인딩 경로 문자열이며 InterfaceBinding 형식의 인터페이스 처리기를 찾아볼 수 있음.</returns>
+        public Dictionary<string, InterfaceHandler> SetBindings(object targetRoot, byte slaveAddress)
             => SetBindings(targetRoot, point => { point.SlaveAddress = slaveAddress; });
+
+        /// <summary>
+        /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.
+        /// </summary>
+        /// <param name="disposing">Dispose 메서드 수행 중인지 여부</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    Service?.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        /// <summary>
+        /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

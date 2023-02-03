@@ -7,7 +7,7 @@ namespace VagabondK.Interface.Abstractions
     /// 인터페이스 바인딩 멤버 정의를 위한 특성
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, Inherited = true, AllowMultiple = true)]
-    public abstract class InterfaceBindingAttribute : Attribute
+    public abstract class InterfacePointAttribute : Attribute
     {
         /// <summary>
         /// 인터페이스 포인트 생성시 호출되는 메서드

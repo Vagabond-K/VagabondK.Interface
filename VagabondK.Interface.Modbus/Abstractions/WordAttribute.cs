@@ -8,7 +8,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
     /// <summary>
     /// Modbus Word(Holding Register, Input Register) 형식 바인딩 멤버 정의를 위한 특성
     /// </summary>
-    public abstract class WordAttribute : ModbusBindingAttribute
+    public abstract class WordAttribute : ModbusPointAttribute
     {
         /// <summary>
         /// 생성자

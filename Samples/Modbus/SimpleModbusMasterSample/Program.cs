@@ -85,8 +85,6 @@ namespace SimpleModbusMasterSample
     {
         [InputRegister(200, DateTimeFormat = DateTimeFormat.Bytes, DateTimeFormatString = "yyMdHmff")]
         public DateTime DateTime1 { get => Get<DateTime>(); set => Set(value); }
-        //[ModbusDI(0)]
-        //public int c2 { private get;  set; } = 9;
 
         [HoldingRegister(411)]
         public ushort BitFlags { get => Get<ushort>(0); set => Set(value); }

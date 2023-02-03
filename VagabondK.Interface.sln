@@ -19,7 +19,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleModbusMasterSample", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleModbusSlaveSample", "Samples\Modbus\SimpleModbusSlaveSample\SimpleModbusSlaveSample.csproj", "{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VagabondK.Interface.LSElectric", "VagabondK.Interface.LSElectric\VagabondK.Interface.LSElectric.csproj", "{57C28610-1103-434F-BC30-1582FF7A23A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VagabondK.Interface.LSElectric", "VagabondK.Interface.LSElectric\VagabondK.Interface.LSElectric.csproj", "{57C28610-1103-434F-BC30-1582FF7A23A4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LS ELECTRIC", "LS ELECTRIC", "{549B7153-2E9B-43EB-8AC4-0A454EAE09F1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleCnetClientSample", "Samples\LS ELECTRIC\SimpleCnetClientSample\SimpleCnetClientSample.csproj", "{6006E52D-59FC-4C00-8706-408C32A9FB07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleFEnetClientSample", "Samples\LS ELECTRIC\SimpleFEnetClientSample\SimpleFEnetClientSample.csproj", "{32686D90-CE27-44C6-B700-09C6C67E4C48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,6 +61,14 @@ Global
 		{57C28610-1103-434F-BC30-1582FF7A23A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57C28610-1103-434F-BC30-1582FF7A23A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57C28610-1103-434F-BC30-1582FF7A23A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6006E52D-59FC-4C00-8706-408C32A9FB07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6006E52D-59FC-4C00-8706-408C32A9FB07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6006E52D-59FC-4C00-8706-408C32A9FB07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6006E52D-59FC-4C00-8706-408C32A9FB07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32686D90-CE27-44C6-B700-09C6C67E4C48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32686D90-CE27-44C6-B700-09C6C67E4C48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32686D90-CE27-44C6-B700-09C6C67E4C48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32686D90-CE27-44C6-B700-09C6C67E4C48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -65,6 +79,9 @@ Global
 		{E30D7B4D-D2C7-4559-90B0-5BA4E835FE2B} = {814CE81D-B876-4FEA-B509-B4CDFD4E7021}
 		{0D9B2C4C-6173-4409-9E08-461FA5048CFA} = {814CE81D-B876-4FEA-B509-B4CDFD4E7021}
 		{9AA8F71E-48A9-4E52-BD77-EBDBE1D647BD} = {814CE81D-B876-4FEA-B509-B4CDFD4E7021}
+		{549B7153-2E9B-43EB-8AC4-0A454EAE09F1} = {2157B19E-96A9-42DA-B94C-419CAF736088}
+		{6006E52D-59FC-4C00-8706-408C32A9FB07} = {549B7153-2E9B-43EB-8AC4-0A454EAE09F1}
+		{32686D90-CE27-44C6-B700-09C6C67E4C48} = {549B7153-2E9B-43EB-8AC4-0A454EAE09F1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C4A198F4-6474-4F77-A906-0B50A8F7838D}
