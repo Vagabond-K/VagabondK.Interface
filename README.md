@@ -134,8 +134,8 @@ class Program
         var handlers = @interface.SetBindings(obj);
         @interface.PollingCompleted += (s, e) =>
         {
-            Console.WriteLine($"SetBitValue1: {obj.SetBitValue}");
-            Console.WriteLine($"SetSingleValue1: {obj.SetSingleValue}");
+            Console.WriteLine($"SetBitValue: {obj.SetBitValue}");
+            Console.WriteLine($"SetSingleValue: {obj.SetSingleValue}");
         };
         @interface.Start();
 
