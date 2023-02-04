@@ -73,7 +73,7 @@ class Program
             obj.SetBitValue = !obj.SetBitValue;
             obj.SetSingleValue++;
 
-            //인터페이스 핸들러를 이용한 값 전송
+            //수동으로 인터페이스 핸들러를 이용하여 값 전송
             //handlers[nameof(obj.SetBitValue)].Send(!obj.SetBitValue);
             //handlers[nameof(obj.SetSingleValue)].Send(obj.SetSingleValue + 1);
         }

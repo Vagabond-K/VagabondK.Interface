@@ -91,7 +91,7 @@ class Program
             obj.DoubleWordValue++;
             obj.LongWordValue++;
 
-            //인터페이스 핸들러를 이용한 값 전송
+            //수동으로 인터페이스 핸들러를 이용하여 값 전송
             //handlers[nameof(obj.BitValue)].Send(!obj.BitValue);
             //handlers[nameof(obj.ByteValue)].Send(obj.ByteValue + 1);
             //handlers[nameof(obj.WordValue)].Send(obj.WordValue + 1);
