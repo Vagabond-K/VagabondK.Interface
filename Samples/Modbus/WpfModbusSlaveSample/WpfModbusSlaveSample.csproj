@@ -57,6 +57,7 @@
     <Reference Include="VagabondK.Protocols.Channels, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\VagabondK.Protocols.Channels.1.0.11\lib\net461\VagabondK.Protocols.Channels.dll</HintPath>
     </Reference>
+    <Reference Include="VagabondK.Protocols.Modbus, Version=1.1.1.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="VagabondK.Windows, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\VagabondK.Windows.1.0.7\lib\net461\VagabondK.Windows.dll</HintPath>
     </Reference>
@@ -77,6 +78,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MainViewModel.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -110,6 +112,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\VagabondK.Interface.Abstractions\VagabondK.Interface.Abstractions.csproj">
+      <Project>{43cf6b9d-88cf-4907-ba0f-7152425862e3}</Project>
+      <Name>VagabondK.Interface.Abstractions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\VagabondK.Interface.Modbus\VagabondK.Interface.Modbus.csproj">
       <Project>{60dea48d-47b5-4007-8639-33d0aedecc0c}</Project>
       <Name>VagabondK.Interface.Modbus</Name>

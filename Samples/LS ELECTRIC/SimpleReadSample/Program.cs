@@ -13,32 +13,28 @@ class Program
     {
         [PlcPoint("%MX100")]
         public bool BitValue { get; private set; }
-
         [PlcPoint("%MB100")]
         public byte ByteValue { get; private set; }
-
         [PlcPoint("%MW100")]
         public short WordValue { get; private set; }
-
         [PlcPoint("%MD100")]
         public int DoubleWordValue { get; private set; }
-
         [PlcPoint("%ML100")]
         public long LongWordValue { get; private set; }
     }
 
     static void Main()
     {
-        var client = new CnetClient(new SerialPortChannel("COM5", 9600, 8, StopBits.One, Parity.None, Handshake.None)
-        //var client = new FEnetClient(new TcpChannel("127.0.0.1", 2004)
+        var channel = new SerialPortChannel("COM5", 9600, 8, StopBits.One, Parity.None, Handshake.None) //Cnet을 위한 시리얼 포트 채널
+        //var channel = new TcpChannel("127.0.0.1", 2004) //FEnet을 위한 TCP 채널
         {
             Logger = new ConsoleChannelLogger()
-        });
+        };
+
+        var @interface = new CnetInterface(new CnetClient(channel), 1); //Cnet 인터페이스
+        //var @interface = new FEnetInterface(new FEnetClient(channel)); //FEnet 인터페이스
 
         var obj = new InterfaceObject();
-
-        var @interface = new CnetInterface(client, 1);
-        //var @interface = new FEnetInterface(client);
         @interface.SetBindings(obj);
         @interface.PollingCompleted += (s, e) =>
         {

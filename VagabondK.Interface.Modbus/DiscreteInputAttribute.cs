@@ -43,6 +43,6 @@ namespace VagabondK.Interface.Modbus
         /// <param name="rootAttribute">자동 바인딩 시 지정한 최상위 인터페이스 특성</param>
         /// <returns>인터페이스 포인트</returns>
         protected override InterfacePoint OnCreatePoint(MemberInfo memberInfo, InterfaceAttribute rootAttribute)
-            => new BitPoint(GetSlaveAddress(rootAttribute), true, Address, RequestAddress, RequestLength, null);
+            => new BitPoint(GetSlaveAddress(rootAttribute), false, Address, RequestAddress, RequestLength, null);
     }
 }

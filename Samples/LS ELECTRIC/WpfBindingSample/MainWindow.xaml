@@ -21,6 +21,10 @@
                 <Setter Property="Margin" Value="3"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
             </Style>
+            <Style x:Key="ValueStyle" TargetType="Run">
+                <Setter Property="Foreground" Value="Lime"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+            </Style>
             <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
                 <Setter Property="Margin" Value="3"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -40,11 +44,11 @@
         <UniformGrid Columns="2">
             <GroupBox Header="수신한 값" DataContext="{Binding InterfaceObject}">
                 <UniformGrid Margin="3" Columns="1">
-                    <TextBlock>%MX100: <Run Text="{Binding BitValue}"/></TextBlock>
-                    <TextBlock>%MB100: <Run Text="{Binding ByteValue}"/></TextBlock>
-                    <TextBlock>%MW100: <Run Text="{Binding WordValue}"/></TextBlock>
-                    <TextBlock>%MD100: <Run Text="{Binding DoubleWordValue}"/></TextBlock>
-                    <TextBlock>%MW100: <Run Text="{Binding LongWordValue}"/></TextBlock>
+                    <TextBlock>%MX100: <Run Style="{StaticResource ValueStyle}" Text="{Binding BitValue}"/></TextBlock>
+                    <TextBlock>%MB100: <Run Style="{StaticResource ValueStyle}" Text="{Binding ByteValue}"/></TextBlock>
+                    <TextBlock>%MW100: <Run Style="{StaticResource ValueStyle}" Text="{Binding WordValue}"/></TextBlock>
+                    <TextBlock>%MD100: <Run Style="{StaticResource ValueStyle}" Text="{Binding DoubleWordValue}"/></TextBlock>
+                    <TextBlock>%MW100: <Run Style="{StaticResource ValueStyle}" Text="{Binding LongWordValue}"/></TextBlock>
                 </UniformGrid>
             </GroupBox>
             <GroupBox Header="바인딩으로 값 쓰기" DataContext="{Binding InterfaceObject}">

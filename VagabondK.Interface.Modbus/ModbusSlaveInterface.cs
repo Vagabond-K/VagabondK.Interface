@@ -23,6 +23,8 @@ namespace VagabondK.Interface.Modbus
 
         private readonly Dictionary<ushort, AddressMap> addressMaps = new Dictionary<ushort, AddressMap>();
         private readonly Dictionary<ushort, List<ModbusPoint>> slaveMaps = new Dictionary<ushort, List<ModbusPoint>>();
+        private readonly object initializingValuesLock = new object();
+        private bool initializingValues;
         private bool disposedValue;
 
         /// <summary>
@@ -259,9 +261,10 @@ namespace VagabondK.Interface.Modbus
                             wordMap.TryGetValue((ushort)address, out var refPoints) ? refPoints.Where(refPoint => refPoint != point) : Enumerable.Empty<IModbusWordPoint>()).ToArray();
                     }
 
-                if (points != null)
-                    foreach (var refPoint in points)
-                        refPoint.SetReceivedValue(words, timeStamp);
+                lock (initializingValuesLock)
+                    if (points != null && !initializingValues)
+                        foreach (var refPoint in points)
+                            refPoint.SetReceivedValue(words, timeStamp);
             }
             else if (point is BitPoint bitPoint)
             {
@@ -272,9 +275,10 @@ namespace VagabondK.Interface.Modbus
                         if ((point.Writable ? addressMap.coils : addressMap.discreteInput).TryGetValue(pointAddress, out var refPoints))
                             points = refPoints.Where(refPoint => refPoint != bitPoint).ToArray();
                     }
-                if (points != null)
-                    foreach (var refPoint in points)
-                        (refPoint as ModbusPoint<TValue>)?.SetReceivedValue(value, timeStamp);
+                lock (initializingValuesLock)
+                    if (points != null && !initializingValues)
+                        foreach (var refPoint in points)
+                            (refPoint as ModbusPoint<TValue>)?.SetReceivedValue(value, timeStamp);
             }
 
             return result;
@@ -288,6 +292,20 @@ namespace VagabondK.Interface.Modbus
         /// <returns>인터페이스 처리기 사전. 키는 바인딩 경로 문자열이며 InterfaceBinding 형식의 인터페이스 처리기를 찾아볼 수 있음.</returns>
         public Dictionary<string, InterfaceHandler> SetBindings(object targetRoot, byte slaveAddress)
             => SetBindings(targetRoot, point => { point.SlaveAddress = slaveAddress; });
+
+        /// <summary>
+        /// Modbus 슬레이브들의 메모리를 인터페이스 포인트 값들로 초기화
+        /// </summary>
+        public void InitializeSlaveValues()
+        {
+            lock (initializingValuesLock)
+            {
+                initializingValues = true;
+                foreach (var point in this)
+                    point.SendLocalValue();
+                initializingValues = false;
+            }
+        }
 
         /// <summary>
         /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.

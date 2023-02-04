@@ -13,13 +13,13 @@ namespace WpfBindingSample
     {
         public MainViewModel()
         {
-            var client = new CnetClient(new SerialPortChannel("COM5", 9600, 8, StopBits.One, Parity.None, Handshake.None));
-            //var client = new FEnetClient(new TcpChannel("127.0.0.1", 2004));
+            var channel = new SerialPortChannel("COM5", 9600, 8, StopBits.One, Parity.None, Handshake.None); //Cnet을 위한 시리얼 포트 채널
+            var @interface = new CnetInterface(new CnetClient(channel), 1); //Cnet 인터페이스
+
+            //var channel = new TcpChannel("127.0.0.1", 2004); //FEnet을 위한 TCP 채널
+            //var @interface = new FEnetInterface(new FEnetClient(channel)); //FEnet 인터페이스
 
             InterfaceObject = new InterfaceObject();
-
-            var @interface = new CnetInterface(client, 1);
-            //var @interface = new FEnetInterface(client);
             InterfaceHandlers = @interface.SetBindings(InterfaceObject);
             @interface.Start();
         }

@@ -7,9 +7,110 @@
     xmlns:vk="http://schemas.vagabond-k.com/winfx/2016/xaml"
     xmlns:local="clr-namespace:WpfModbusSlaveSample"
     mc:Ignorable="d"
-    Background="Transparent"
-    Title="Modbus Slave" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+    Title="Modbus Slave Sample"
+    Background="#FF101010" ClientBackground="#FF101010" SizeToContent="WidthAndHeight"
+    d:DataContext="{d:DesignInstance Type=local:MainViewModel}">
+    <StackPanel Margin="10">
+        <StackPanel.Resources>
+            <Style TargetType="GroupBox" BasedOn="{StaticResource {x:Type GroupBox}}">
+                <Setter Property="Margin" Value="3"/>
+                <Setter Property="MinWidth" Value="500"/>
+                <Setter Property="Background" Value="#FF202020"/>
+            </Style>
+            <Style TargetType="TextBlock">
+                <Setter Property="Margin" Value="3"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style x:Key="ValueStyle" TargetType="Run">
+                <Setter Property="Foreground" Value="Lime"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+            </Style>
+            <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+                <Setter Property="Margin" Value="3"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="Slider" BasedOn="{StaticResource {x:Type Slider}}">
+                <Setter Property="Margin" Value="3"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+        </StackPanel.Resources>
+        <GroupBox Header="Discrete Input" DataContext="{Binding InterfaceObject}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <UniformGrid Margin="3" Columns="1">
+                    <TextBlock>[100] BitValue1: <Run Style="{StaticResource ValueStyle}" Text="{Binding BitValue1}"/></TextBlock>
+                    <TextBlock>[101] BitValue2: <Run Style="{StaticResource ValueStyle}" Text="{Binding BitValue2}"/></TextBlock>
+                </UniformGrid>
+                <UniformGrid Margin="3" Columns="1" Grid.Column="1">
+                    <CheckBox Content="Is True" IsChecked="{Binding BitValue1}"/>
+                    <CheckBox Content="Is True" IsChecked="{Binding BitValue2}"/>
+                </UniformGrid>
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Input Register" DataContext="{Binding InterfaceObject}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <UniformGrid Margin="3" Columns="1">
+                    <TextBlock>[200.0] BitFlagValue1: <Run Style="{StaticResource ValueStyle}" Text="{Binding BitFlagValue1}"/></TextBlock>
+                    <TextBlock>[200.1] BitFlagValue2: <Run Style="{StaticResource ValueStyle}" Text="{Binding BitFlagValue2}"/></TextBlock>
+                    <TextBlock>[300.0] ByteValue1: <Run Style="{StaticResource ValueStyle}" Text="{Binding ByteValue1}"/></TextBlock>
+                    <TextBlock>[300.1] ByteValue2: <Run Style="{StaticResource ValueStyle}" Text="{Binding ByteValue2}"/></TextBlock>
+                    <TextBlock>[301] Int16Value: <Run Style="{StaticResource ValueStyle}" Text="{Binding Int16Value}"/></TextBlock>
+                    <TextBlock>[302] Int32Value: <Run Style="{StaticResource ValueStyle}" Text="{Binding Int32Value}"/></TextBlock>
+                    <TextBlock>[304] Int64Value: <Run Style="{StaticResource ValueStyle}" Text="{Binding Int64Value}"/></TextBlock>
+                    <TextBlock>[308] SingleValue: <Run Style="{StaticResource ValueStyle}" Text="{Binding SingleValue}"/></TextBlock>
+                    <TextBlock>[310] DoubleValue: <Run Style="{StaticResource ValueStyle}" Text="{Binding DoubleValue}"/></TextBlock>
+                </UniformGrid>
+                <UniformGrid Margin="3" Columns="1" Grid.Column="1">
+                    <CheckBox Content="Is True" IsChecked="{Binding BitFlagValue1}"/>
+                    <CheckBox Content="Is True" IsChecked="{Binding BitFlagValue2}"/>
+                    <Slider Minimum="0" Maximum="255" Value="{Binding ByteValue1}"/>
+                    <Slider Minimum="0" Maximum="255" Value="{Binding ByteValue2}"/>
+                    <Slider Minimum="-32768" Maximum="32767" Value="{Binding Int16Value}"/>
+                    <Slider Minimum="-2147483648" Maximum="2147483647" Value="{Binding Int32Value}"/>
+                    <Slider Minimum="-9223372036854775808" Maximum="9223372036854775807" Value="{Binding Int64Value}"/>
+                    <Slider Minimum="-999999" Maximum="999999" Value="{Binding SingleValue}"/>
+                    <Slider Minimum="-999999" Maximum="999999" Value="{Binding DoubleValue}"/>
+                </UniformGrid>
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Coil" DataContext="{Binding InterfaceObject}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <UniformGrid Margin="3" Columns="1">
+                    <TextBlock>[400] SetBitValue1: <Run Style="{StaticResource ValueStyle}" Text="{Binding SetBitValue1}"/></TextBlock>
+                    <TextBlock>[401] SetBitValue2: <Run Style="{StaticResource ValueStyle}" Text="{Binding SetBitValue2}"/></TextBlock>
+                </UniformGrid>
+                <UniformGrid Margin="3" Columns="1" Grid.Column="1">
+                    <CheckBox Content="Is True" IsChecked="{Binding SetBitValue1}"/>
+                    <CheckBox Content="Is True" IsChecked="{Binding SetBitValue2}"/>
+                </UniformGrid>
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Holding Register" DataContext="{Binding InterfaceObject}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <UniformGrid Margin="3" Columns="1">
+                    <TextBlock>[500] SetSingleValue1: <Run Style="{StaticResource ValueStyle}" Text="{Binding SetSingleValue1}"/></TextBlock>
+                    <TextBlock>[502] SetSingleValue2: <Run Style="{StaticResource ValueStyle}" Text="{Binding SetSingleValue2}"/></TextBlock>
+                </UniformGrid>
+                <UniformGrid Margin="3" Columns="1" Grid.Column="1">
+                    <Slider Minimum="-999999" Maximum="999999" Value="{Binding SetSingleValue1}"/>
+                    <Slider Minimum="-999999" Maximum="999999" Value="{Binding SetSingleValue2}"/>
+                </UniformGrid>
+            </Grid>
+        </GroupBox>
+    </StackPanel>
 </vk:ThemeWindow>
