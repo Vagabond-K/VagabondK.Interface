@@ -5,6 +5,7 @@ using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.LSElectric;
 using VagabondK.Protocols.Channels;
 using VagabondK.Protocols.LSElectric.Cnet;
+//using VagabondK.Protocols.LSElectric.FEnet;
 
 namespace WpfBindingSample
 {
@@ -13,12 +14,14 @@ namespace WpfBindingSample
         public MainViewModel()
         {
             var client = new CnetClient(new SerialPortChannel("COM5", 9600, 8, StopBits.One, Parity.None, Handshake.None));
+            //var client = new FEnetClient(new TcpChannel("127.0.0.1", 2004));
 
             InterfaceObject = new InterfaceObject();
 
-            var cnet = new CnetInterface(client, 1);
-            InterfaceHandlers = cnet.SetBindings(InterfaceObject);
-            cnet.Start();
+            var @interface = new CnetInterface(client, 1);
+            //var @interface = new FEnetInterface(client);
+            InterfaceHandlers = @interface.SetBindings(InterfaceObject);
+            @interface.Start();
         }
 
         public InterfaceObject InterfaceObject { get; }

@@ -8,6 +8,7 @@ using VagabondK.Interface.LSElectric;
 using VagabondK.Protocols.Channels;
 using VagabondK.Protocols.Logging;
 using VagabondK.Protocols.LSElectric.Cnet;
+//using VagabondK.Protocols.LSElectric.FEnet;
 
 class Program
 {
@@ -49,15 +50,17 @@ class Program
     static void Main()
     {
         var client = new CnetClient(new SerialPortChannel("COM5", 9600, 8, StopBits.One, Parity.None, Handshake.None)
+        //var client = new FEnetClient(new TcpChannel("127.0.0.1", 2004)
         {
             Logger = new ConsoleChannelLogger()
         });
 
         var obj = new InterfaceObject();
 
-        var cnet = new CnetInterface(client, 1);
-        cnet.SetBindings(obj);
-        cnet.PollingCompleted += (s, e) =>
+        var @interface = new CnetInterface(client, 1);
+        //var @interface = new FEnetInterface(client);
+        @interface.SetBindings(obj);
+        @interface.PollingCompleted += (s, e) =>
         {
             Console.WriteLine($"%MX100: {obj.BitValue}");
             Console.WriteLine($"%MB100: {obj.ByteValue}");
@@ -65,7 +68,7 @@ class Program
             Console.WriteLine($"%MD100: {obj.DoubleWordValue}");
             Console.WriteLine($"%ML100: {obj.LongWordValue}");
         };
-        cnet.Start();
+        @interface.Start();
 
         while (true)
         {
