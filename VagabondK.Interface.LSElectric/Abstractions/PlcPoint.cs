@@ -101,9 +101,10 @@ namespace VagabondK.Interface.LSElectric.Abstractions
         /// <summary>
         /// 비동기로 값을 전송하고자 할 때 호출되는 메서드
         /// </summary>
+        /// <typeparam name="T">전송할 값 형식</typeparam>
         /// <param name="value">전송할 값</param>
         /// <param name="timeStamp">전송할 값의 적용 일시</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">태스크 취소 토큰</param>
         /// <returns>전송 성공 여부 반환 태스크</returns>
         protected override Task<bool> OnSendAsyncRequested<T>(in T value, in DateTime? timeStamp, in CancellationToken? cancellationToken)
         {
@@ -115,6 +116,7 @@ namespace VagabondK.Interface.LSElectric.Abstractions
         /// <summary>
         /// 값을 동기적으로 전송하고자 할 때 호출되는 메서드
         /// </summary>
+        /// <typeparam name="T">전송할 값 형식</typeparam>
         /// <param name="value">전송할 값</param>
         /// <param name="timeStamp">전송할 값의 적용 일시</param>
         /// <returns>전송 성공 여부</returns>

@@ -90,7 +90,7 @@ namespace VagabondK.Interface.Abstractions
         /// <typeparam name="TValue">전송할 값 형식</typeparam>
         /// <param name="value">전송할 값</param>
         /// <param name="timeStamp">전송할 값의 적용 일시</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">태스크 취소 토큰</param>
         /// <returns>전송 성공 여부 반환 태스크</returns>
         protected internal abstract Task<bool> OnSendAsyncRequested<TValue>(in TValue value, in DateTime? timeStamp, in CancellationToken? cancellationToken);
 

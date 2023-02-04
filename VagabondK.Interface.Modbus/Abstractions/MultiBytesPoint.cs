@@ -10,7 +10,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
     /// <summary>
     /// 다중 Byte 기반 인터페이스 포인트
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
+    /// <typeparam name="TValue">값 형식</typeparam>
     public abstract class MultiBytesPoint<TValue> : WordPoint<TValue>
     {
         private bool skipFirstByte = false;

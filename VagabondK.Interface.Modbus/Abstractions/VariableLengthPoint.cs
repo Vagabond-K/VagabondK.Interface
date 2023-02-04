@@ -7,7 +7,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
     /// <summary>
     /// 가변 길이 기반 인터페이스 포인트
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
+    /// <typeparam name="TValue">값 형식</typeparam>
     public abstract class VariableLengthPoint<TValue> : MultiBytesPoint<TValue>
     {
         private int bytesLength = 2;

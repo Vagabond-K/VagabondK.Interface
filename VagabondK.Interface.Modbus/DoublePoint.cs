@@ -9,7 +9,7 @@ namespace VagabondK.Interface.Modbus
     /// <summary>
     /// Modbus Word(Holding Register, Input Register) 기반의 double 형식 직렬화 인터페이스 포인트
     /// </summary>
-    /// <typeparam name="TValue"></typeparam>
+    /// <typeparam name="TValue">값 형식</typeparam>
     public class DoublePoint<TValue> : NumericPoint<double, TValue>
     {
         /// <summary>
