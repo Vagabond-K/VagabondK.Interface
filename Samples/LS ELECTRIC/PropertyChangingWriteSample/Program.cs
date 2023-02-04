@@ -1,0 +1,94 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO.Ports;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using VagabondK.Interface.LSElectric;
+using VagabondK.Protocols.Channels;
+using VagabondK.Protocols.Logging;
+using VagabondK.Protocols.LSElectric.Cnet;
+
+class Program
+{
+    [LSElectricPLC]
+    class InterfaceObject : INotifyPropertyChanging
+    {
+        private bool bitValue;
+        private byte byteValue;
+        private short wordValue;
+        private int doubleWordValue;
+        private long longWordValue;
+
+        public event PropertyChangingEventHandler PropertyChanging;
+
+        private void Set<T>(ref T target, in T value, [CallerMemberName] string propertyName = null)
+        {
+            if (!EqualityComparer<T>.Default.Equals(target, value))
+            {
+                var eventArgs = new QueryPropertyChangingEventArgs<T>(propertyName, value);
+                PropertyChanging?.Invoke(this, eventArgs);
+                if (!eventArgs.IsCanceled)
+                    target = value;
+            }
+        }
+
+        [PlcPoint("%MX100")]
+        public bool BitValue { get => bitValue; set => Set(ref bitValue, value); }
+
+        [PlcPoint("%MB100")]
+        public byte ByteValue { get => byteValue; set => Set(ref byteValue, value); }
+
+        [PlcPoint("%MW100")]
+        public short WordValue { get => wordValue; set => Set(ref wordValue, value); }
+
+        [PlcPoint("%MD100")]
+        public int DoubleWordValue { get => doubleWordValue; set => Set(ref doubleWordValue, value); }
+
+        [PlcPoint("%ML100")]
+        public long LongWordValue { get => longWordValue; set => Set(ref longWordValue, value); }
+    }
+
+    class QueryPropertyChangingEventArgs<T> : PropertyChangingEventArgs
+    {
+        public QueryPropertyChangingEventArgs(string propertyName, T newValue) : base(propertyName)
+        {
+            NewValue = newValue;
+        }
+
+        public T NewValue { get; }
+        public bool IsCanceled { get; set; }
+    }
+
+    static void Main()
+    {
+        var client = new CnetClient(new SerialPortChannel("COM5", 9600, 8, StopBits.One, Parity.None, Handshake.None)
+        {
+            Logger = new ConsoleChannelLogger()
+        });
+
+        var obj = new InterfaceObject();
+
+        var cnet = new CnetInterface(client, 1);
+        cnet.SetBindings(obj);
+        cnet.PollingCompleted += (s, e) =>
+        {
+            Console.WriteLine($"%MX100: {obj.BitValue}");
+            Console.WriteLine($"%MB100: {obj.ByteValue}");
+            Console.WriteLine($"%MW100: {obj.WordValue}");
+            Console.WriteLine($"%MD100: {obj.DoubleWordValue}");
+            Console.WriteLine($"%ML100: {obj.LongWordValue}");
+        };
+        cnet.Start();
+
+        while (true)
+        {
+            Thread.Sleep(5000);
+            obj.BitValue = !obj.BitValue;
+            obj.ByteValue++;
+            obj.WordValue++;
+            obj.DoubleWordValue++;
+            obj.LongWordValue++;
+        }
+    }
+}

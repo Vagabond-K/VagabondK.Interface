@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="VagabondK.Protocols.LSElectric" Version="1.1.8" />
+    <PackageReference Include="VagabondK.Protocols.LSElectric" Version="1.1.10" />
   </ItemGroup>
 
   <ItemGroup>

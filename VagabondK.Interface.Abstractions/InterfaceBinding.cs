@@ -20,7 +20,6 @@ namespace VagabondK.Interface
         private object target;
         private string memberName;
         private bool rollbackOnSendError = true;
-        private Type memberType;
         private Func<TValue> getter;
         private Action<TValue> setter;
         private bool isUpdating;
@@ -60,7 +59,6 @@ namespace VagabondK.Interface
             }
             else
             {
-                memberType = null;
                 getter = null;
                 setter = null;
             }
@@ -234,7 +232,7 @@ namespace VagabondK.Interface
 
             if (getter != null && point != null
                 && (Mode == InterfaceMode.TwoWay || Mode == InterfaceMode.SendOnly)
-                && memberType != null && !isUpdating && e.PropertyName == MemberName)
+                && !isUpdating && e.PropertyName == MemberName)
             {
                 var value = getter();
                 if (!(!point.IsWaitSending ? point.OnSendRequested(value, null) : await point.OnSendAsyncRequested(value, null, null)) && RollbackOnSendError)

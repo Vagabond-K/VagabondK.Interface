@@ -6,9 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="VagabondK" Version="1.0.9" />
-    <PackageReference Include="VagabondK.Protocols.Channels" Version="1.0.11" />
-    <PackageReference Include="VagabondK.Protocols.LSElectric" Version="1.1.8" />
+    <PackageReference Include="VagabondK.Protocols.Channels.SerialPort" Version="1.0.8" />
+    <PackageReference Include="VagabondK.Protocols.LSElectric" Version="1.1.10" />
   </ItemGroup>
 
   <ItemGroup>
