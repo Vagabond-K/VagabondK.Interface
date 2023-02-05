@@ -9,8 +9,9 @@ Modbus, LS ELECTRIC(구 LS산전)의 Cnet, FEnet 등의 프로토콜을 이용�
 통신 프로토콜 기반 인터페이스 기능을 구현하기 위한 추상 형식들과, 기본적인 인터페이스 처리기와 바인딩 클래스를 제공합니다.
 
 # VagabondK.Interface.Modbus [![NuGet](https://img.shields.io/nuget/v/VagabondK.Interface.Modbus.svg)](https://www.nuget.org/packages/VagabondK.Interface.Modbus/)   
-
 본 라이브러리를 이용하면 Modbus 프로토콜을 이용하여 객체의 속성 및 필드를 이용한 인터페이스를 구현할 수 있습니다.   
+자세한 사용법은 블로그 링크를 참고하시기 바랍니다.   
+- [[블로그 링크] 객체 매핑을 이용한 Modbus 프로토콜 인터페이스 라이브러리](https://blog.naver.com/vagabond-k/223005811950)   
 
 #### Modbus Master 기반 데이터 읽어오기 예시
 ```csharp
@@ -158,6 +159,8 @@ class Program
 # VagabondK.Interface.LSElectric [![NuGet](https://img.shields.io/nuget/v/VagabondK.Interface.LSElectric.svg)](https://www.nuget.org/packages/VagabondK.Interface.LSElectric/)   
 
 본 라이브러리를 이용하면 LS ELECTRIC(구 LS산전)의 Cnet, FEnet 프로토콜을 이용하여 객체의 속성 및 필드를 이용한 PLC 인터페이스를 구현할 수 있습니다.   
+자세한 사용법은 블로그 링크를 참고하시기 바랍니다.   
+- [[블로그 링크] 객체 매핑을 이용한 LS산전 프로토콜 인터페이스 라이브러리](https://blog.naver.com/vagabond-k/223005956653)   
 
 #### Cnet 프로토콜 기반 LS ELECTRIC(구 LS산전) PLC와의 인터페이스 예시
 ```csharp
