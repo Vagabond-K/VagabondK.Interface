@@ -169,7 +169,10 @@ namespace VagabondK.Interface.Abstractions
                         type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IInterfaceHandlerContainer<>));
 
                     if (interfaceType != null)
+                    {
                         defaultHandler = Activator.CreateInstance(typeof(InterfaceHandler<>).MakeGenericType(interfaceType.GenericTypeArguments[0])) as InterfaceHandler;
+                        Add(defaultHandler);
+                    }
                 }
                 return defaultHandler;
             }
