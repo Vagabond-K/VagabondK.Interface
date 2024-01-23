@@ -40,7 +40,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         public bool SkipFirstByte { get => skipFirstByte; set => SetProperty(ref skipFirstByte, value); }
 
         /// <summary>
-        /// 값의 Byte 단위 개수
+        /// 직렬화 Byte 개수
         /// </summary>
         protected virtual int BytesCount => bytesCount.Value;
 

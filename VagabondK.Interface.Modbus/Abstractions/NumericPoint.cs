@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Protocols.Modbus;
 
@@ -13,6 +14,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
     public abstract class NumericPoint<TSerialize, TValue> : MultiBytesPoint<TValue>
     {
         private double scale = 1;
+        private readonly Lazy<int> bytesCount = new Lazy<int>(() => Marshal.SizeOf(typeof(TSerialize)));
 
         /// <summary>
         /// 생성자
@@ -48,6 +50,11 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// <param name="serialize">직렬화 할 값</param>
         /// <returns>직렬화 된 byte 배열</returns>
         protected abstract byte[] Serialize(TSerialize serialize);
+
+        /// <summary>
+        /// 직렬화 Byte 개수
+        /// </summary>
+        protected override int BytesCount => bytesCount.Value;
 
         /// <summary>
         /// 값을 byte 배열로 직렬화
