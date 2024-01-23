@@ -59,10 +59,11 @@ namespace VagabondK.Interface.LSElectric
         /// <param name="stationNumber">국번</param>
         /// <param name="pollingTimeSpan">값 읽기 요청 주기. 기본값은 500 밀리초.</param>
         /// <param name="points">인터페이스 포인트 열거</param>
-        public CnetInterface(CnetClient cnetClient, byte stationNumber, int pollingTimeSpan, IEnumerable<PlcPoint> points) : base(pollingTimeSpan, points)
+        public CnetInterface(CnetClient cnetClient, byte stationNumber, int pollingTimeSpan, IEnumerable<PlcPoint> points) : base(pollingTimeSpan)
         {
             CnetClient = cnetClient;
             StationNumber = stationNumber;
+            AddRange(points);
         }
 
         /// <summary>

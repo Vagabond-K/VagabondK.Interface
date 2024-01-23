@@ -37,12 +37,13 @@ namespace VagabondK.Interface.Modbus
         /// </summary>
         /// <param name="service">Modbus 슬레이브 서비스</param>
         /// <param name="points">인터페이스 포인트 열거</param>
-        public ModbusSlaveInterface(ModbusSlaveService service, IEnumerable<ModbusPoint> points) : base(points)
+        public ModbusSlaveInterface(ModbusSlaveService service, IEnumerable<ModbusPoint> points)
         {
             Service = service;
 
             service.RequestedWriteCoil += OnRequestedWriteCoil;
             service.RequestedWriteHoldingRegister += OnRequestedWriteHoldingRegister;
+            AddRange(points);
         }
 
         private void SetPoint(ModbusPoint point)

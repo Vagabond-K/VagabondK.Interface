@@ -17,12 +17,6 @@ namespace VagabondK.Interface.Abstractions
         private readonly HashSet<TPoint> points = new HashSet<TPoint>();
 
         /// <summary>
-        /// 생성자
-        /// </summary>
-        /// <param name="points">인터페이스 포인트 열거</param>
-        protected Interface(IEnumerable<TPoint> points) => AddRange(points);
-
-        /// <summary>
         /// 인터페이스 포인트가 추가되었을 경우 호출됨
         /// </summary>
         /// <param name="point">추가된 인터페이스 포인트</param>

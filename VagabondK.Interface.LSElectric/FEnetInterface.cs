@@ -56,9 +56,10 @@ namespace VagabondK.Interface.LSElectric
         /// <param name="fenetClient">FEnet 클라이언트</param>
         /// <param name="pollingTimeSpan">값 읽기 요청 주기. 기본값은 500 밀리초.</param>
         /// <param name="points">인터페이스 포인트 열거</param>
-        public FEnetInterface(FEnetClient fenetClient, int pollingTimeSpan, IEnumerable<PlcPoint> points) : base(pollingTimeSpan, points)
+        public FEnetInterface(FEnetClient fenetClient, int pollingTimeSpan, IEnumerable<PlcPoint> points) : base(pollingTimeSpan)
         {
             FEnetClient = fenetClient;
+            AddRange(points);
         }
 
         /// <summary>

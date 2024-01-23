@@ -34,8 +34,7 @@ namespace VagabondK.Interface.Abstractions
         /// 생성자
         /// </summary>
         /// <param name="pollingTimeSpan">값 읽기 요청 주기</param>
-        /// <param name="points">인터페이스 포인트 열거</param>
-        protected PollingInterface(int pollingTimeSpan, IEnumerable<TPoint> points) : base(points)
+        protected PollingInterface(int pollingTimeSpan)
         {
             this.pollingTimeSpan = pollingTimeSpan;
         }

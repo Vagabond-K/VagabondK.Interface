@@ -250,9 +250,10 @@ namespace VagabondK.Interface.Modbus
         /// <param name="master">Modbus 마스터</param>
         /// <param name="pollingTimeSpan">값 읽기 요청 주기. 기본값은 500 밀리초.</param>
         /// <param name="points">인터페이스 포인트 열거</param>
-        public ModbusMasterInterface(ModbusMaster master, int pollingTimeSpan, IEnumerable<ModbusPoint> points) : base(pollingTimeSpan, points)
+        public ModbusMasterInterface(ModbusMaster master, int pollingTimeSpan, IEnumerable<ModbusPoint> points) : base(pollingTimeSpan)
         {
             Master = master ?? throw new ArgumentNullException(nameof(master));
+            AddRange(points);
         }
 
         /// <summary>
