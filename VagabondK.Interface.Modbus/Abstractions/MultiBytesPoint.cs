@@ -57,7 +57,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// <summary>
         /// 값의 Word 단위 개수
         /// </summary>
-        protected override int WordsCount => (int)Math.Ceiling((BytesCount + (skipFirstByte ? 1 : 0)) / 2d) * 2;
+        protected override int WordsCount => (int)Math.Ceiling((BytesCount + (skipFirstByte ? 1 : 0)) / 2d);
 
         /// <summary>
         /// 로컬 레지스터로부터 byte 배열 가져오기
