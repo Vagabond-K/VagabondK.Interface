@@ -1,7 +1,7 @@
 # Vagabond K Interface Library [![License](https://img.shields.io/badge/license-LGPL--2.1-blue.svg)](https://licenses.nuget.org/LGPL-2.1-only)  
 Modbus, LS ELECTRIC(구 LS산전)의 Cnet, FEnet 등의 프로토콜을 이용하여 객체의 속성 및 필드를 통한 인터페이스를 간단하게 구현할 수 있도록 지원하는 기능들을 구현했습니다.
 
-- [Documentation](https://vagabond-k.github.io/Documentation)
+- [Documentation](https://vagabond-k.github.io/docs/api/VagabondK.Interface.html)
 
 [!["Buy me a soju"](https://vagabond-k.github.io/Images/buymeasoju131x36.png)](https://www.buymeacoffee.com/VagabondK) 
 
