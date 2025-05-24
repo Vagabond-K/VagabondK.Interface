@@ -16,6 +16,20 @@ namespace VagabondK.Interface.LSElectric
         public LSElectricPLCAttribute() { }
 
         /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="stationNumber">국번</param>
+        public LSElectricPLCAttribute(byte stationNumber)
+        {
+            StationNumber = stationNumber;
+        }
+
+        /// <summary>
+        /// 국번
+        /// </summary>
+        public byte? StationNumber { get; }
+
+        /// <summary>
         /// 바인딩 할 인터페이스 포인트 형식(PlcPoint 형식)
         /// </summary>
         public override Type InterfacePointType => typeof(PlcPoint);

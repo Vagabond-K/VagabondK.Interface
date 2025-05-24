@@ -161,11 +161,11 @@ namespace VagabondK.Interface.Modbus.Abstractions
             Words = words;
         }
 
-        void IModbusWordPoint.SetReceivedValue(ModbusWords words, in DateTime? timeStamp)
+        void IModbusWordPoint.SetReceivedValue(ModbusWords words)
         {
             Words = words;
             var value = GetValue();
-            SetReceivedValue(value, timeStamp);
+            SetReceivedValue(value, null);
         }
 
     }

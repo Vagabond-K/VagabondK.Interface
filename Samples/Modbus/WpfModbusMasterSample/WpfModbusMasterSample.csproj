@@ -51,15 +51,17 @@
     <Reference Include="VagabondK, Version=1.0.9.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\VagabondK.1.0.9\lib\net461\VagabondK.dll</HintPath>
     </Reference>
-    <Reference Include="VagabondK.Protocols.Abstractions, Version=1.0.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\VagabondK.Protocols.Abstractions.1.0.6\lib\net461\VagabondK.Protocols.Abstractions.dll</HintPath>
+    <Reference Include="VagabondK.Protocols.Abstractions, Version=1.1.21.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\VagabondK.Protocols.Abstractions.1.1.21\lib\net461\VagabondK.Protocols.Abstractions.dll</HintPath>
     </Reference>
-    <Reference Include="VagabondK.Protocols.Channels, Version=1.0.11.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\VagabondK.Protocols.Channels.1.0.11\lib\net461\VagabondK.Protocols.Channels.dll</HintPath>
+    <Reference Include="VagabondK.Protocols.Channels, Version=1.1.21.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\VagabondK.Protocols.Channels.1.1.21\lib\net461\VagabondK.Protocols.Channels.dll</HintPath>
     </Reference>
-    <Reference Include="VagabondK.Protocols.Modbus, Version=1.1.1.0, Culture=neutral, PublicKeyToken=null" />
-    <Reference Include="VagabondK.Windows, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\VagabondK.Windows.1.0.7\lib\net461\VagabondK.Windows.dll</HintPath>
+    <Reference Include="VagabondK.Protocols.Modbus, Version=1.1.21.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\VagabondK.Protocols.Modbus.1.1.21\lib\net461\VagabondK.Protocols.Modbus.dll</HintPath>
+    </Reference>
+    <Reference Include="VagabondK.Windows, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\VagabondK.Windows.1.0.8\lib\net461\VagabondK.Windows.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />

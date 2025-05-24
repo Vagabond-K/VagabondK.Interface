@@ -60,15 +60,7 @@ namespace VagabondK.Interface.Modbus
         /// <summary>
         /// byte 배열와 DateTime 사이의 변환을 위한 형식 문자열. y: 년, M: 월, d: 일, H: 시, m: 분, s: 초, f: 밀리초. yyMdHmsff일 경우 총 9 Byte를 사용하며 년과 밀리초만 2 Byte로 직렬화 하고 나머지는 1 Byte를 사용함.
         /// </summary>
-        public string Format
-        {
-            get => format;
-            set
-            {
-                if (SetProperty(ref format, value))
-                    UpdateByteCounts();
-            }
-        }
+        public string Format { get => format; set { SetProperty(ref format, value, () => UpdateByteCounts()); } }
 
         /// <summary>
         /// Modbus 데이터 상 DateTime 값의 DateTimeKind를 정의

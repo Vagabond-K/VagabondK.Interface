@@ -33,6 +33,29 @@ namespace VagabondK.Interface.Modbus.Abstractions
             : base(slaveAddress, writable, address, skipFirstByte, endian, requestAddress, requestLength, useMultiWriteFunction, handlers)
         {
             this.scale = scale;
+            UpdateInternalMethods();
+        }
+
+        private Func<TValue, byte[]> funcGetBytes;
+        private Func<TValue> funcGetValue;
+
+        private void UpdateInternalMethods()
+        {
+            if (typeof(TValue) == typeof(TSerialize) && scale == 1)
+            {
+                funcGetBytes = (value) => (this as NumericPoint<TValue, TValue>).Serialize(value);
+                funcGetValue = () => (this as NumericPoint<TValue, TValue>).Deserialize();
+            }
+            else if (scale == 1)
+            {
+                funcGetBytes = (value) => Serialize(value.To<TValue, TSerialize>());
+                funcGetValue = () => Deserialize().To<TSerialize, TValue>();
+            }
+            else
+            {
+                funcGetBytes = (value) => Serialize(DoReverseScale(value));
+                funcGetValue = () => DoScale(Deserialize()); ;
+            }
         }
 
         private TValue DoScale(TSerialize serialize) => (serialize.To<TSerialize, double>() * Scale).To<double, TValue>();
@@ -63,9 +86,7 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// <returns>직렬화 된 byte 배열</returns>
         protected override byte[] GetBytes(in TValue value)
         {
-            var bytes = typeof(TValue) == typeof(TSerialize) && scale == 1
-            ? (this as NumericPoint<TValue, TValue>).Serialize(value)
-            : Serialize(scale == 1 ? value.To<TValue, TSerialize>() : DoReverseScale(value));
+            var bytes = funcGetBytes(value);
 
             return ToBytesInRegisters(bytes, bytes.Length > 1);
         }
@@ -74,13 +95,11 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// 로컬 레지스터로부터 값 가져오기
         /// </summary>
         /// <returns>인터페이스 결과 값</returns>
-        protected override TValue GetValue() => typeof(TValue) == typeof(TSerialize) && scale == 1
-            ? (this as NumericPoint<TValue, TValue>).Deserialize()
-            : scale == 1 ? Deserialize().To<TSerialize, TValue>() : DoScale(Deserialize());
+        protected override TValue GetValue() => funcGetValue();
 
         /// <summary>
         /// 수치형 값의 스케일(배율)
         /// </summary>
-        public double Scale { get => scale; set => SetProperty(ref scale, value); }
+        public double Scale { get => scale; set => SetProperty(ref scale, value, () => UpdateInternalMethods()); }
     }
 }

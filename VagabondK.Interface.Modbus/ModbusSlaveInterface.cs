@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.Modbus.Abstractions;
+using VagabondK.Protocols.Channels;
 using VagabondK.Protocols.Modbus;
 using VagabondK.Protocols.Modbus.Data;
 
@@ -27,6 +28,10 @@ namespace VagabondK.Interface.Modbus
         private bool initializingValues;
         private bool disposedValue;
 
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        public ModbusSlaveInterface() : this(new ModbusSlaveService(), null) { }
         /// <summary>
         /// 생성자
         /// </summary>
@@ -201,7 +206,6 @@ namespace VagabondK.Interface.Modbus
 
         private void OnRequestedWriteCoil(object sender, RequestedWriteCoilEventArgs e)
         {
-            DateTime? timeStamp = DateTime.Now;
             BitPoint[] points = null;
             lock (addressMaps)
                 if (addressMaps.TryGetValue(e.SlaveAddress, out var addressMap))
@@ -212,13 +216,12 @@ namespace VagabondK.Interface.Modbus
                 foreach (var point in points)
                 {
                     var value = e.Values[point.Address - e.Address];
-                    point.SetReceivedValue(value, timeStamp);
+                    point.SetReceivedValue(value);
                 }
         }
 
         private void OnRequestedWriteHoldingRegister(object sender, RequestedWriteHoldingRegisterEventArgs e)
         {
-            DateTime? timeStamp = DateTime.Now;
             IModbusWordPoint[] points = null;
             lock (addressMaps)
                 if (addressMaps.TryGetValue(e.SlaveAddress, out var addressMap))
@@ -227,7 +230,7 @@ namespace VagabondK.Interface.Modbus
 
             if (points != null && Service.TryGetModbusSlave(e.SlaveAddress, out var modbusSlave))
                 foreach (var point in points)
-                    point.SetReceivedValue(modbusSlave.HoldingRegisters, timeStamp);
+                    point.SetReceivedValue(modbusSlave.HoldingRegisters);
         }
 
         /// <summary>
@@ -237,7 +240,7 @@ namespace VagabondK.Interface.Modbus
 
         internal delegate bool SendToSlaveDelegate<TValue>(ModbusSlave slave, in TValue value);
 
-        internal bool OnSendRequested<TValue>(ModbusPoint<TValue> point, in TValue value, in DateTime? timeStamp, SendToSlaveDelegate<TValue> send)
+        internal bool OnSendRequested<TValue>(ModbusPoint<TValue> point, in TValue value, SendToSlaveDelegate<TValue> send)
         {
             ModbusSlave modbusSlave = null;
             var slaveAddress = point.SlaveAddress;
@@ -265,7 +268,7 @@ namespace VagabondK.Interface.Modbus
                 lock (initializingValuesLock)
                     if (points != null && !initializingValues)
                         foreach (var refPoint in points)
-                            refPoint.SetReceivedValue(words, timeStamp);
+                            refPoint.SetReceivedValue(words);
             }
             else if (point is BitPoint bitPoint)
             {
@@ -279,7 +282,7 @@ namespace VagabondK.Interface.Modbus
                 lock (initializingValuesLock)
                     if (points != null && !initializingValues)
                         foreach (var refPoint in points)
-                            (refPoint as ModbusPoint<TValue>)?.SetReceivedValue(value, timeStamp);
+                            (refPoint as ModbusPoint<TValue>)?.SetReceivedValue(value);
             }
 
             return result;
@@ -295,9 +298,23 @@ namespace VagabondK.Interface.Modbus
             => SetBindings(targetRoot, point => { point.SlaveAddress = slaveAddress; });
 
         /// <summary>
-        /// Modbus 슬레이브들의 메모리를 인터페이스 포인트 값들로 초기화
+        /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.
         /// </summary>
-        public void InitializeSlaveValues()
+        /// <param name="disposing">Dispose 메서드 수행 중인지 여부</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                disposedValue = true;
+                if (disposing)
+                {
+                    Service?.Dispose();
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        protected override void OnStart()
         {
             lock (initializingValuesLock)
             {
@@ -306,32 +323,19 @@ namespace VagabondK.Interface.Modbus
                     point.SendLocalValue();
                 initializingValues = false;
             }
+
+            foreach (var item in Service.Channels.Where(item => item is ChannelProvider).Cast<ChannelProvider>())
+                item.Start();
         }
 
-        /// <summary>
-        /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.
-        /// </summary>
-        /// <param name="disposing">Dispose 메서드 수행 중인지 여부</param>
-        protected virtual void Dispose(bool disposing)
+        /// <inheritdoc/>
+        protected override void OnStop()
         {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    Service?.Dispose();
-                }
-
-                disposedValue = true;
-            }
-        }
-
-        /// <summary>
-        /// 관리되지 않는 리소스의 확보, 해제 또는 다시 설정과 관련된 애플리케이션 정의 작업을 수행합니다.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            foreach (var item in Service.Channels)
+                if (item is Channel channel)
+                    channel.Close();
+                else if (item is ChannelProvider channelProvider)
+                    channelProvider.Stop();
         }
     }
 }

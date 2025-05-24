@@ -8,7 +8,7 @@ using VagabondK.Protocols.LSElectric.Cnet;
 
 class Program
 {
-    [LSElectricPLC]
+    [LSElectricPLC(1)]
     class InterfaceObject
     {
         [PlcPoint("%MX100")]
@@ -31,7 +31,7 @@ class Program
             Logger = new ConsoleChannelLogger()
         };
 
-        var @interface = new CnetInterface(new CnetClient(channel), 1); //Cnet 인터페이스
+        var @interface = new CnetInterface(new CnetClient(channel)); //Cnet 인터페이스
         //var @interface = new FEnetInterface(new FEnetClient(channel)); //FEnet 인터페이스
 
         var obj = new InterfaceObject();

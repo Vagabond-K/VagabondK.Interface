@@ -12,7 +12,7 @@ using VagabondK.Protocols.LSElectric.Cnet;
 
 class Program
 {
-    [LSElectricPLC]
+    [LSElectricPLC(1)]
     class InterfaceObject : INotifyPropertyChanged
     {
         private bool bitValue;

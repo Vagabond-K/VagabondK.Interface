@@ -51,7 +51,7 @@ namespace VagabondK.Interface.Abstractions
         /// </summary>
         public event ReceivedEventHandler Received;
 
-        internal void OnReceived() => Received?.Invoke(this);
+        internal void OnReceived(in DateTime? timeStamp) => Received?.Invoke(this, timeStamp);
         internal abstract void SetReceivedOtherTypeValue<T>(in T value, in DateTime? timeStamp);
 
         internal void RaiseErrorOccurred(Exception exception, ErrorDirection direction)
@@ -90,7 +90,7 @@ namespace VagabondK.Interface.Abstractions
         /// <summary>
         /// 인터페이스 값의 적용 일시
         /// </summary>
-        public DateTime? TimeStamp { get => timeStamp; internal set => SetProperty(ref timeStamp, value); }
+        public DateTime? TimeStamp { get => timeStamp; }
 
         /// <summary>
         /// 인터페이스 값의 형식

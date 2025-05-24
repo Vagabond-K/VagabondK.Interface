@@ -15,6 +15,7 @@ namespace VagabondK.Interface.LSElectric.Abstractions
     public abstract class PlcPoint : InterfacePoint, INotifyPropertyChanged, INotifyPropertyChanging
     {
         private DeviceVariable deviceVariable;
+        private byte stationNumber;
         internal object writeRequest;
 
         /// <summary>
@@ -56,6 +57,11 @@ namespace VagabondK.Interface.LSElectric.Abstractions
         public DeviceVariable DeviceVariable { get => deviceVariable; set => SetProperty(ref deviceVariable, value); }
 
         /// <summary>
+        /// 국번
+        /// </summary>
+        public byte StationNumber { get => stationNumber; set => SetProperty(ref stationNumber, value); }
+
+        /// <summary>
         /// 속성 값이 변경될 때 발생합니다.
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
@@ -64,7 +70,7 @@ namespace VagabondK.Interface.LSElectric.Abstractions
         /// </summary>
         public event PropertyChangingEventHandler PropertyChanging;
 
-        internal abstract void SetReceivedValue(in DeviceValue deviceValue, in DateTime timeStamp);
+        internal abstract void SetReceivedValue(in DeviceValue deviceValue);
 
         internal new void RaiseErrorOccurred(Exception exception, ErrorDirection errorDirection)
             => base.RaiseErrorOccurred(exception, errorDirection);
@@ -122,8 +128,8 @@ namespace VagabondK.Interface.LSElectric.Abstractions
         /// <returns>전송 성공 여부</returns>
         protected override bool OnSendRequested<T>(in T value, in DateTime? timeStamp) => Send(value);
 
-        internal override void SetReceivedValue(in DeviceValue deviceValue, in DateTime timeStamp)
-            => SetReceivedValue(ToPointValue(deviceValue), timeStamp);
+        internal override void SetReceivedValue(in DeviceValue deviceValue)
+            => SetReceivedValue(ToPointValue(deviceValue), null);
 
         /// <summary>
         /// 인터페이스 포인트의 값을 PLC 디바이스 값으로 변환

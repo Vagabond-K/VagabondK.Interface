@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.Modbus.Abstractions;
-using VagabondK.Protocols;
+using VagabondK.Protocols.Channels;
 using VagabondK.Protocols.Modbus;
 using VagabondK.Protocols.Modbus.Data;
 using VagabondK.Protocols.Modbus.Serialization;
@@ -33,6 +33,8 @@ namespace VagabondK.Interface.Modbus
         private readonly List<MergedReadRequest> readRequests = new List<MergedReadRequest>();
         private readonly List<Exception> pollingExceptions = new List<Exception>();
         private readonly Dictionary<byte, ModbusWords> slaveWords = new Dictionary<byte, ModbusWords>();
+        private bool autoRequestMerge = true;
+        private int requestMergeSpan;
 
         /// <summary>
         /// 1주기의 값 읽기 요청과 응답이 완료되었을 때 발생하는 이벤트
@@ -68,10 +70,7 @@ namespace VagabondK.Interface.Modbus
             lock (settingChangedLock) isSettingChanged = true;
         }
 
-        /// <summary>
-        /// 값 읽기 요청들을 일괄 생성할 필요가 있을 때 호출되는 메서드
-        /// </summary>
-        protected override void OnCreatePollingRequests()
+        private void CreatePollingRequests()
         {
             readRequests.Clear();
             if (AutoRequestMerge)
@@ -146,7 +145,7 @@ namespace VagabondK.Interface.Modbus
             {
                 if (isSettingChanged)
                 {
-                    OnCreatePollingRequests();
+                    CreatePollingRequests();
                     isSettingChanged = false;
                 }
             }
@@ -161,7 +160,6 @@ namespace VagabondK.Interface.Modbus
                 try
                 {
                     var response = Master.Request(request);
-                    DateTime? timeStamp = DateTime.Now;
 
                     if (response is ModbusReadResponse)
                     {
@@ -177,7 +175,7 @@ namespace VagabondK.Interface.Modbus
                                         {
                                             var index = point.Address - request.Address;
                                             var value = values[index];
-                                            bitPoint.SetReceivedValue(value, timeStamp);
+                                            bitPoint.SetReceivedValue(value);
                                         }
                                 }
                                 break;
@@ -194,7 +192,7 @@ namespace VagabondK.Interface.Modbus
                                     words.Allocate(request.Address, (byte[])wordResponse.Bytes);
                                     foreach (var point in request.Points)
                                         if (point is IModbusWordPoint wordPoint)
-                                            wordPoint.SetReceivedValue(words, timeStamp);
+                                            wordPoint.SetReceivedValue(words);
                                 }
                                 break;
                         }
@@ -227,6 +225,10 @@ namespace VagabondK.Interface.Modbus
             PollingCompleted?.Invoke(this, new PollingCompletedEventArgs(succeed, pollingExceptions.Count > 0 ? new AggregateException(pollingExceptions) : null));
         }
 
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        public ModbusMasterInterface() : this(new ModbusMaster()) { }
         /// <summary>
         /// 생성자
         /// </summary>
@@ -264,11 +266,37 @@ namespace VagabondK.Interface.Modbus
         /// <summary>
         /// 자동 요청 병합 여부, true이면 근접한 데이터 주소를 하나의 요청으로 병합.
         /// </summary>
-        public bool AutoRequestMerge { get; set; } = true;
+        public bool AutoRequestMerge
+        {
+            get => autoRequestMerge;
+            set
+            {
+                if (autoRequestMerge != value)
+                    lock (settingChangedLock)
+                    {
+                        autoRequestMerge = value;
+                        isSettingChanged = true;
+                    }
+            }
+        }
+
         /// <summary>
         /// 요청 병합 간격, 해당 간격 이하의 인터페이스 포인트는 하나의 요청으로 병합
         /// </summary>
-        public int RequestMergeSpan { get; set; }
+        public int RequestMergeSpan
+        {
+            get => requestMergeSpan;
+            set
+            {
+                if (requestMergeSpan != value)
+                    lock (settingChangedLock)
+                    {
+                        requestMergeSpan = value;
+                        isSettingChanged = true;
+                    }
+            }
+        }
+
         /// <summary>
         /// 요청과 요청 사이의 지연시간, 밀리초 단위.
         /// </summary>
@@ -295,6 +323,21 @@ namespace VagabondK.Interface.Modbus
         {
             base.Dispose(disposing);
             Master?.Dispose();
+        }
+
+        /// <inheritdoc/>
+        protected override void OnStart()
+        {
+            (Master.Channel as ChannelProvider)?.Start();
+            base.OnStart();
+        }
+
+        /// <inheritdoc/>
+        protected override void OnStop()
+        {
+            (Master.Channel as Channel)?.Close();
+            (Master.Channel as ChannelProvider)?.Stop();
+            base.OnStop();
         }
     }
 }

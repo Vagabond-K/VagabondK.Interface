@@ -54,6 +54,19 @@ namespace VagabondK.Interface.Modbus.Abstractions
             return false;
         }
 
+        internal bool SetProperty<TProperty>(ref TProperty target, in TProperty value, Action beforeChangedEvent, [CallerMemberName] string propertyName = null)
+        {
+            if (!EqualityComparer<TProperty>.Default.Equals(target, value))
+            {
+                RaisePropertyChanging(propertyName);
+                target = value;
+                beforeChangedEvent?.Invoke();
+                RaisePropertyChanged(propertyName);
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// 임의의 속성 값 변경 이벤트 발생 메서드
         /// </summary>
@@ -161,20 +174,18 @@ namespace VagabondK.Interface.Modbus.Abstractions
         /// 수신한 값을 로컬 환경에 설정
         /// </summary>
         /// <param name="value">받은 값</param>
-        /// <param name="timeStamp">받은 값의 적용 일시</param>
-        internal void SetReceivedValue(in TValue value, in DateTime? timeStamp)
-            => base.SetReceivedValue(value, timeStamp);
+        internal void SetReceivedValue(in TValue value) => SetReceivedValue(value, null);
 
         private ModbusMasterInterface masterInterface;
         private ModbusSlaveInterface slaveInterface;
 
-        private bool SendToMaster(in TValue value, in DateTime? timeStamp)
+        private bool SendToMaster(in TValue value)
         {
             var master = masterInterface?.Master;
             return master != null && OnSendRequested(master, value);
         }
-        private bool SendToSlave(in TValue value, in DateTime? timeStamp)
-            => slaveInterface?.OnSendRequested(this, value, timeStamp, OnSendRequested) ?? false;
+        private bool SendToSlave(in TValue value)
+            => slaveInterface?.OnSendRequested(this, value, OnSendRequested) ?? false;
 
         internal override void Initialize()
         {
@@ -199,12 +210,12 @@ namespace VagabondK.Interface.Modbus.Abstractions
         }
 
         private SendDelegate send;
-        private delegate bool SendDelegate(in TValue value, in DateTime? timeStamp);
+        private delegate bool SendDelegate(in TValue value);
 
         private bool Send<T>(in T value, in DateTime? timeStamp)
             => ((this is ModbusPoint<T> point)
-            ? point.send?.Invoke(value, timeStamp)
-            : send?.Invoke(value.To<T, TValue>(), timeStamp)) ?? false;
+            ? point.send?.Invoke(value)
+            : send?.Invoke(value.To<T, TValue>())) ?? false;
 
         /// <summary>
         /// 비동기로 값을 전송하고자 할 때 호출되는 메서드

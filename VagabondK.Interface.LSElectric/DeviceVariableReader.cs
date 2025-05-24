@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using VagabondK.Interface.LSElectric.Abstractions;
 using VagabondK.Protocols.LSElectric;
 
@@ -18,12 +17,11 @@ namespace VagabondK.Interface.LSElectric
 
         public void ReadAndUpdatePoints()
         {
-            var timeStamp = DateTime.Now;
             var data = Read();
             foreach (var item in data)
                 if (TryGetValue(item.Key, out var points))
                     foreach (var point in points)
-                        point.SetReceivedValue(item.Value, timeStamp);
+                        point.SetReceivedValue(item.Value);
         }
     }
 }

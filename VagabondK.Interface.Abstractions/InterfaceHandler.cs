@@ -35,8 +35,8 @@ namespace VagabondK.Interface
             {
                 SetLocalValue(value, timeStamp);
                 OnReceived(value, timeStamp);
-                OnReceived();
-                Received?.Invoke(this);
+                OnReceived(timeStamp);
+                Received?.Invoke(this, value, timeStamp);
             }
         }
 
@@ -77,7 +77,7 @@ namespace VagabondK.Interface
         /// <summary>
         /// 로컬 값
         /// </summary>
-        public TValue Value { get => value; protected set => SetProperty(ref this.value, value); }
+        public TValue Value { get => value; }
 
         /// <summary>
         /// 인터페이스 값의 형식

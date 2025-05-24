@@ -14,7 +14,7 @@ namespace WpfBindingSample
         public MainViewModel()
         {
             var channel = new SerialPortChannel("COM5", 9600, 8, StopBits.One, Parity.None, Handshake.None); //Cnet을 위한 시리얼 포트 채널
-            var @interface = new CnetInterface(new CnetClient(channel), 1); //Cnet 인터페이스
+            var @interface = new CnetInterface(new CnetClient(channel)); //Cnet 인터페이스
 
             //var channel = new TcpChannel("127.0.0.1", 2004); //FEnet을 위한 TCP 채널
             //var @interface = new FEnetInterface(new FEnetClient(channel)); //FEnet 인터페이스
@@ -28,7 +28,7 @@ namespace WpfBindingSample
         public Dictionary<string, InterfaceHandler> InterfaceHandlers { get; }
     }
 
-    [LSElectricPLC]
+    [LSElectricPLC(1)]
     class InterfaceObject : NotifyPropertyChangeObject
     {
         [PlcPoint("%MX100")]

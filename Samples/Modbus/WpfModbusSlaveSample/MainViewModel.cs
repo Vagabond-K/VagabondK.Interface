@@ -17,8 +17,7 @@ namespace WpfModbusSlaveSample
 
             InterfaceObject = new InterfaceObject();
             InterfaceHandlers = @interface.SetBindings(InterfaceObject);
-            @interface.InitializeSlaveValues();
-            channel.Start();
+            @interface.Start();
         }
 
         public InterfaceObject InterfaceObject { get; }

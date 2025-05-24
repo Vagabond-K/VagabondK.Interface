@@ -6,7 +6,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>Vagabond K</Authors>
     <Company>Vagabond K</Company>
-    <Version>1.0.4</Version>
+    <Version>1.1.0</Version>
     <PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Vagabond-K/VagabondK.Interface/tree/master/VagabondK.Interface.LSElectric</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Vagabond-K/VagabondK.Interface/tree/master/VagabondK.Interface.LSElectric</RepositoryUrl>
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="VagabondK.Protocols.LSElectric" Version="1.1.10" />
+    <PackageReference Include="VagabondK.Protocols.LSElectric" Version="1.1.21" />
   </ItemGroup>
 
   <ItemGroup>

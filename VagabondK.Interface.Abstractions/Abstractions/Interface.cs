@@ -2,19 +2,122 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace VagabondK.Interface.Abstractions
 {
     /// <summary>
     /// 통신 기반 인터페이스
     /// </summary>
+    public abstract class Interface : INotifyPropertyChanged, IDisposable
+    {
+        private bool isRunning;
+        private bool disposedValue;
+        private readonly object startStopLock = new object();
+
+        /// <summary>
+        /// 임의의 속성 값 변경 이벤트 발생 메서드
+        /// </summary>
+        /// <param name="propertyName">변경된 속성 이름</param>
+        protected void RaisePropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        internal abstract Type GetPointType();
+
+        /// <summary>
+        /// 통신 기반 인터페이스를 시작하기 위한 코드를 구현합니다.
+        /// </summary>
+        protected abstract void OnStart();
+
+        /// <summary>
+        /// 통신 기반 인터페이스를 종료하기 위한 코드를 구현합니다.
+        /// </summary>
+        protected abstract void OnStop();
+
+        /// <summary>
+        /// 속성 값이 변경될 때 발생합니다.
+        /// </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// 현재 인터페이스의 포인트 형식을 가져옵니다.
+        /// </summary>
+        public Type PointType => GetPointType();
+
+        /// <summary>
+        /// 실행 여부
+        /// </summary>
+        public bool IsRunning
+        {
+            get => isRunning;
+            set
+            {
+                if (isRunning != value)
+                {
+                    isRunning = value;
+                    RaisePropertyChanged(nameof(IsRunning));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 소멸자
+        /// </summary>
+        ~Interface() => Dispose(false);
+
+        /// <summary>
+        /// 통신 기반 인터페이스를 시작합니다.
+        /// </summary>
+        public void Start()
+        {
+            lock (startStopLock)
+            {
+                IsRunning = true;
+                OnStart();
+            }
+        }
+
+        /// <summary>
+        /// 통신 기반 인터페이스를 종료합니다.
+        /// </summary>
+        public void Stop()
+        {
+            lock (startStopLock)
+            {
+                IsRunning = false;
+                OnStop();
+            }
+        }
+
+        /// <inheritdoc/>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                disposedValue = true;
+                if (disposing)
+                    Stop();
+            }
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    /// <summary>
+    /// 통신 기반 인터페이스
+    /// </summary>
     /// <typeparam name="TPoint">인터페이스 포인트 형식</typeparam>
-    public abstract class Interface<TPoint> : ICollection<TPoint>, IEnumerable<TPoint>, INotifyPropertyChanged where TPoint : InterfacePoint
+    public abstract class Interface<TPoint> : Interface, ICollection<TPoint>, IEnumerable<TPoint> where TPoint : InterfacePoint
     {
         private readonly HashSet<TPoint> points = new HashSet<TPoint>();
+
+        internal override Type GetPointType() => typeof(TPoint);
 
         /// <summary>
         /// 인터페이스 포인트가 추가되었을 경우 호출됨
@@ -27,17 +130,6 @@ namespace VagabondK.Interface.Abstractions
         /// </summary>
         /// <param name="point">제거된 인터페이스 포인트</param>
         protected virtual void OnRemoved(TPoint point) { }
-
-        /// <summary>
-        /// 임의의 속성 값 변경 이벤트 발생 메서드
-        /// </summary>
-        /// <param name="propertyName">변경된 속성 이름</param>
-        protected void RaisePropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-        /// <summary>
-        /// 속성 값이 변경될 때 발생합니다.
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
         /// 인터페이스 포인트 열거를 일괄 추가합니다.

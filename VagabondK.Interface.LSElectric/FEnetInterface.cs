@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.LSElectric.Abstractions;
+using VagabondK.Protocols.Channels;
 using VagabondK.Protocols.LSElectric;
+using VagabondK.Protocols.LSElectric.Cnet;
 using VagabondK.Protocols.LSElectric.FEnet;
 
 namespace VagabondK.Interface.LSElectric
@@ -33,6 +35,10 @@ namespace VagabondK.Interface.LSElectric
         private readonly List<DeviceVariableReader> deviceVariableReaders = new List<DeviceVariableReader>();
         private readonly List<Exception> pollingExceptions = new List<Exception>();
 
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        public FEnetInterface() : this(new FEnetClient(), null) { }
         /// <summary>
         /// 생성자
         /// </summary>
@@ -133,10 +139,7 @@ namespace VagabondK.Interface.LSElectric
             lock (settingChangedLock) isSettingChanged = true;
         }
 
-        /// <summary>
-        /// 값 읽기 요청들을 일괄 생성할 필요가 있을 때 호출되는 메서드
-        /// </summary>
-        protected override void OnCreatePollingRequests()
+        private void CreatePollingRequests()
         {
             deviceVariableReaders.Clear();
             var groups = this.GroupBy(point => point.DeviceVariable).GroupBy(g => g.Key.DataType);
@@ -165,7 +168,7 @@ namespace VagabondK.Interface.LSElectric
             {
                 if (isSettingChanged)
                 {
-                    OnCreatePollingRequests();
+                    CreatePollingRequests();
                     isSettingChanged = false;
                 }
             }
@@ -212,5 +215,20 @@ namespace VagabondK.Interface.LSElectric
         /// 요청을 병렬로 수행할 지 여부.
         /// </summary>
         public bool PollingParallelRequests { get; set; }
+
+        /// <inheritdoc/>
+        protected override void OnStart()
+        {
+            (FEnetClient.Channel as ChannelProvider)?.Start();
+            base.OnStart();
+        }
+
+        /// <inheritdoc/>
+        protected override void OnStop()
+        {
+            (FEnetClient.Channel as Channel)?.Close();
+            (FEnetClient.Channel as ChannelProvider)?.Stop();
+            base.OnStop();
+        }
     }
 }

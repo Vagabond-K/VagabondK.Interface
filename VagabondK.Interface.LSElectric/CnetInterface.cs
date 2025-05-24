@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using VagabondK.Interface.Abstractions;
 using VagabondK.Interface.LSElectric.Abstractions;
+using VagabondK.Protocols.Channels;
 using VagabondK.Protocols.LSElectric;
 using VagabondK.Protocols.LSElectric.Cnet;
 
@@ -18,9 +19,9 @@ namespace VagabondK.Interface.LSElectric
         {
             private readonly Lazy<CnetReadIndividualRequest> request;
 
-            public DeviceVariableReader(CnetInterface @interface) : base(@interface)
+            public DeviceVariableReader(CnetInterface @interface, byte stationNumber) : base(@interface)
             {
-                request = new Lazy<CnetReadIndividualRequest>(() => new CnetReadIndividualRequest(@interface.StationNumber, this.Select(group => group.Key)));
+                request = new Lazy<CnetReadIndividualRequest>(() => new CnetReadIndividualRequest(stationNumber, this.Select(group => group.Key)));
             }
 
             protected override IReadOnlyDictionary<DeviceVariable, DeviceValue> Read()
@@ -29,40 +30,40 @@ namespace VagabondK.Interface.LSElectric
 
         private bool isSettingChanged = true;
         private readonly object settingChangedLock = new object();
-        private readonly List<DeviceVariableReader> deviceVariableReaders = new List<DeviceVariableReader>();
+        //private readonly List<DeviceVariableReader> deviceVariableReaders = new List<DeviceVariableReader>();
+        private readonly Dictionary<byte, List<DeviceVariableReader>> readersDictionary = new Dictionary<byte, List<DeviceVariableReader>>();
         private readonly List<Exception> pollingExceptions = new List<Exception>();
 
         /// <summary>
         /// 생성자
         /// </summary>
-        /// <param name="cnetClient">Cnet 클라이언트</param>
-        /// <param name="stationNumber">국번</param>
-        public CnetInterface(CnetClient cnetClient, byte stationNumber) : this(cnetClient, stationNumber, null) { }
+        public CnetInterface() : this(new CnetClient(), null) { }
         /// <summary>
         /// 생성자
         /// </summary>
         /// <param name="cnetClient">Cnet 클라이언트</param>
-        /// <param name="stationNumber">국번</param>
+        public CnetInterface(CnetClient cnetClient) : this(cnetClient, null) { }
+        /// <summary>
+        /// 생성자
+        /// </summary>
+        /// <param name="cnetClient">Cnet 클라이언트</param>
         /// <param name="pollingTimeSpan">값 읽기 요청 주기. 기본값은 500 밀리초.</param>
-        public CnetInterface(CnetClient cnetClient, byte stationNumber, int pollingTimeSpan) : this(cnetClient, stationNumber, pollingTimeSpan, null) { }
+        public CnetInterface(CnetClient cnetClient, int pollingTimeSpan) : this(cnetClient, pollingTimeSpan, null) { }
         /// <summary>
         /// 생성자
         /// </summary>
         /// <param name="cnetClient">Cnet 클라이언트</param>
-        /// <param name="stationNumber">국번</param>
         /// <param name="points">인터페이스 포인트 열거</param>
-        public CnetInterface(CnetClient cnetClient, byte stationNumber, IEnumerable<PlcPoint> points) : this(cnetClient, stationNumber, 500, points) { }
+        public CnetInterface(CnetClient cnetClient, IEnumerable<PlcPoint> points) : this(cnetClient, 500, points) { }
         /// <summary>
         /// 생성자
         /// </summary>
         /// <param name="cnetClient">Cnet 클라이언트</param>
-        /// <param name="stationNumber">국번</param>
         /// <param name="pollingTimeSpan">값 읽기 요청 주기. 기본값은 500 밀리초.</param>
         /// <param name="points">인터페이스 포인트 열거</param>
-        public CnetInterface(CnetClient cnetClient, byte stationNumber, int pollingTimeSpan, IEnumerable<PlcPoint> points) : base(pollingTimeSpan)
+        public CnetInterface(CnetClient cnetClient, int pollingTimeSpan, IEnumerable<PlcPoint> points) : base(pollingTimeSpan)
         {
             CnetClient = cnetClient;
-            StationNumber = stationNumber;
             AddRange(points);
         }
 
@@ -70,11 +71,6 @@ namespace VagabondK.Interface.LSElectric
         /// LS ELECTRIC(구 LS산전) Cnet 프로토콜 기반 클라이언트입니다. XGT 시리즈 제품의 Cnet I/F 모듈과 통신 가능합니다.
         /// </summary>
         public CnetClient CnetClient { get; }
-
-        /// <summary>
-        /// 국번
-        /// </summary>
-        public byte StationNumber { get; }
 
         /// <summary>
         /// 1주기의 값 읽기 요청과 응답이 완료되었을 때 발생하는 이벤트
@@ -85,12 +81,12 @@ namespace VagabondK.Interface.LSElectric
         {
             var deviceVariable = point.DeviceVariable;
             if (!(point.writeRequest is CnetWriteIndividualRequest writeRequest))
-                point.writeRequest = writeRequest = new CnetWriteIndividualRequest(StationNumber);
+                point.writeRequest = writeRequest = new CnetWriteIndividualRequest(point.StationNumber);
 
             if (writeRequest.Count != 1 || !writeRequest.ContainsKey(deviceVariable))
                 writeRequest.Clear();
 
-            writeRequest.StationNumber = StationNumber;
+            writeRequest.StationNumber = point.StationNumber;
             writeRequest[deviceVariable] = deviceValue;
 
             return CnetClient.Request(writeRequest) is CnetACKResponse;
@@ -123,25 +119,26 @@ namespace VagabondK.Interface.LSElectric
             lock (settingChangedLock) isSettingChanged = true;
         }
 
-        /// <summary>
-        /// 값 읽기 요청들을 일괄 생성할 필요가 있을 때 호출되는 메서드
-        /// </summary>
-        protected override void OnCreatePollingRequests()
+        private void CreatePollingRequests()
         {
-            deviceVariableReaders.Clear();
-            var groups = this.GroupBy(point => point.DeviceVariable).GroupBy(g => g.Key.DataType);
-            foreach (var group in groups)
+            readersDictionary.Clear();
+            foreach (var station in this.GroupBy(point => point.StationNumber))
             {
-                DeviceVariableReader reader = null;
-                foreach (var points in group.OrderBy(vGroup => vGroup.Key.DeviceType).ThenBy(vGroup => vGroup.Key.Index))
+                var deviceVariableReaders = readersDictionary[station.Key] = new List<DeviceVariableReader>();
+                var groups = station.GroupBy(point => point.DeviceVariable).GroupBy(g => g.Key.DataType);
+                foreach (var group in groups)
                 {
-                    if (reader == null || reader.Count >= 16)
+                    DeviceVariableReader reader = null;
+                    foreach (var points in group.OrderBy(vGroup => vGroup.Key.DeviceType).ThenBy(vGroup => vGroup.Key.Index))
                     {
-                        reader = new DeviceVariableReader(this);
-                        deviceVariableReaders.Add(reader);
-                    }
+                        if (reader == null || reader.Count >= 16)
+                        {
+                            reader = new DeviceVariableReader(this, station.Key);
+                            deviceVariableReaders.Add(reader);
+                        }
 
-                    reader[points.Key] = points.ToArray();
+                        reader[points.Key] = points.ToArray();
+                    }
                 }
             }
         }
@@ -155,14 +152,14 @@ namespace VagabondK.Interface.LSElectric
             {
                 if (isSettingChanged)
                 {
-                    OnCreatePollingRequests();
+                    CreatePollingRequests();
                     isSettingChanged = false;
                 }
             }
 
             bool succeed = false;
             pollingExceptions.Clear();
-            foreach (var reader in deviceVariableReaders)
+            foreach (var reader in readersDictionary.Values.SelectMany(item => item))
             {
                 try
                 {
@@ -197,5 +194,20 @@ namespace VagabondK.Interface.LSElectric
         /// 요청과 요청 사이의 지연시간, 밀리초 단위.
         /// </summary>
         public int DelayBetweenPollingRequests { get; set; }
+
+        /// <inheritdoc/>
+        protected override void OnStart()
+        {
+            (CnetClient.Channel as ChannelProvider)?.Start();
+            base.OnStart();
+        }
+
+        /// <inheritdoc/>
+        protected override void OnStop()
+        {
+            (CnetClient.Channel as Channel)?.Close();
+            (CnetClient.Channel as ChannelProvider)?.Stop();
+            base.OnStop();
+        }
     }
 }
