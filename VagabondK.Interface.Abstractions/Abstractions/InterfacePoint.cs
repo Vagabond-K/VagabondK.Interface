@@ -154,7 +154,7 @@ namespace VagabondK.Interface.Abstractions
         /// <summary>
         /// 현재 종속된 인터페이스
         /// </summary>
-        public object Interface { get; internal set; }
+        public Interface Interface { get; internal set; }
 
         /// <summary>
         /// 기본 인터페이스 처리기를 가져옵니다.
