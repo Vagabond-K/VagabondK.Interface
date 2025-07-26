@@ -57,8 +57,8 @@
     <Reference Include="VagabondK.Protocols.Channels, Version=1.1.21.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\VagabondK.Protocols.Channels.1.1.21\lib\net461\VagabondK.Protocols.Channels.dll</HintPath>
     </Reference>
-    <Reference Include="VagabondK.Protocols.Modbus, Version=1.1.21.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\VagabondK.Protocols.Modbus.1.1.21\lib\net461\VagabondK.Protocols.Modbus.dll</HintPath>
+    <Reference Include="VagabondK.Protocols.Modbus, Version=1.1.22.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\VagabondK.Protocols.Modbus.1.1.22\lib\net461\VagabondK.Protocols.Modbus.dll</HintPath>
     </Reference>
     <Reference Include="VagabondK.Windows, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\VagabondK.Windows.1.0.8\lib\net461\VagabondK.Windows.dll</HintPath>
